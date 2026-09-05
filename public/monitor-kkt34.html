@@ -99,6 +99,23 @@
   .g-main>.wide{grid-column:span 1}
   @media(min-width:1180px){.g-main>.wide{grid-column:span 1}}
 
+  /* блок привязки ККТ */
+  #kktBar{border-bottom:1px solid rgba(31,58,88,.8);background:rgba(11,20,36,.45);padding:14px 20px;animation:rowin .45s cubic-bezier(.22,1,.36,1) .12s both}
+  .kktTop{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .kktTop>svg{width:16px;height:16px;color:var(--brand-400);flex:none}
+  .kktBadge{border:1px solid;padding:2px 8px;font:500 10px var(--font-m)}
+  .kktBadge.on{border-color:rgba(52,211,153,.4);background:var(--ok-d);color:#86efac}
+  .kktBadge.dim{border-color:var(--ink-600);background:var(--ink-800);color:var(--ink-400)}
+  .kktCtrls{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex:1;min-width:260px;justify-content:flex-end}
+  #kktInput{height:36px;width:100%;max-width:240px;border:1px solid var(--ink-600);background:var(--ink-950);padding:0 12px;font:500 12px var(--font-m);letter-spacing:.05em;color:var(--ink-100);transition:border-color .15s}
+  #kktInput::placeholder{color:var(--ink-500)}
+  #kktInput:focus{outline:none;border-color:rgba(249,115,22,.7)}
+  #kktInput.err{border-color:rgba(239,68,68,.7)}
+  #kktInput.found{border-color:rgba(31,185,168,.65)}
+  .kktScan{border-color:rgba(31,185,168,.5)!important;background:var(--chz-900)!important;color:var(--chz-300)!important}
+  .kktScan:hover:not(:disabled){border-color:var(--chz-400)!important;background:rgba(31,185,168,.18)!important}
+  .kktHint{margin-top:9px;display:flex;align-items:center;gap:8px;font:500 10.5px var(--font-m);color:var(--ink-400)}
+
   /* службы */
   #svcGrid{display:grid;grid-template-columns:1fr;gap:8px;padding:16px}
   @media(min-width:900px){#svcGrid{grid-template-columns:1fr 1fr;column-gap:16px}}
@@ -282,6 +299,22 @@
             <span id="raLabel">Рестарт всех</span>
           </button>
         </div>
+        <div id="kktBar">
+          <div class="kktTop">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h12V18.6l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5-2 1.5V3.5Z"/><path d="M9 7.5h6M9 10.5h6M9 13.5h3.5"/></svg>
+            <span class="ptitle">Серийный № ККТ</span>
+            <span id="kktBadge" class="kktBadge dim">не привязана</span>
+            <div class="kktCtrls">
+              <input id="kktInput" placeholder="например: 100412345678" spellcheck="false" autocomplete="off">
+              <button class="btn kktScan" id="kktScanBtn" title="Опросить систему: найти ККТ, подключённую к ПК">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><path d="M3 12h18"/></svg>
+                <span id="kktScanLbl">Опросить систему</span>
+              </button>
+              <button class="btn btn-orange" id="kktApplyBtn">Применить</button>
+            </div>
+          </div>
+          <div class="kktHint" id="kktHint"></div>
+        </div>
         <div id="svcGrid"></div>
         <div class="pfoot" id="svcFoot"></div>
       </section>
@@ -338,8 +371,11 @@
 <script>
 "use strict";
 /* ============ Монитор ЛМ · Правовой Статус (ООО «ККТ34») · автономный инструмент ============ */
-var LS_KEY = "kkt34mon.settings", LS_TOK = "kkt34mon.token";
-var KKT = "100412345678", API_VER = "2.4.1.386", INN = "7724490000";
+var LS_KEY = "kkt34mon.settings", LS_TOK = "kkt34mon.token", LS_KKT = "kkt34mon.kkt";
+var API_VER = "2.4.1.386", INN = "7724490000";
+var KKT_POOL = ["100412345678","100387654321","100455667788","100512004578"];
+var KKT_PORTS = ["COM3","COM4","COM5"];
+var SERIAL_RE = /^[0-9A-Z][0-9A-Z-]{4,18}[0-9A-Z]$/;
 var DEMO_TOKEN = "CHZ-DEMO-7F3K9Q2M5V8X1B4N6T0Y3R5E7W9A1S2D4F6G8H0J";
 var STATUS = {
   running:{t:"РАБОТАЕТ", c:"var(--ok)", cls:"ok"},
@@ -361,8 +397,9 @@ var S = {
     {id:"esm-orchestrator",desc:"Оркестратор ESM",st:"running"},
     {id:"uem-agent",desc:"Агент UEM",st:"running"},
     {id:"uem-updater",desc:"Канал обновлений UEM",st:"stopped"},
-    {id:"esm-cm-"+KKT,desc:"Контроллер ККТ · сер. "+KKT,st:"running",kkt:true}
+    {id:"esm-cm-—",desc:"ККТ не привязана — укажите серийный № или выполните опрос",st:"not_found",kkt:true}
   ],
+  kktSerial:null, kktScan:"idle", kktDetected:null, kktError:null,
   configured:false, tokenTail:null, api:"probing", ping:[], lastPoll:null,
   interval:4000, autoHeal:true, injectFaults:false,
   logs:[], logSeq:0, filter:"all",
@@ -379,6 +416,12 @@ try{
   if(saved){ if(saved.interval)S.interval=saved.interval; if(typeof saved.autoHeal==="boolean")S.autoHeal=saved.autoHeal; if(typeof saved.injectFaults==="boolean")S.injectFaults=saved.injectFaults; }
   var tok = JSON.parse(localStorage.getItem(LS_TOK)||"null");
   if(tok && tok.configured){ S.configured=true; S.tokenTail=tok.tail||null; }
+  var ks = localStorage.getItem(LS_KKT);
+  if(ks){
+    S.kktSerial = ks;
+    var d0 = S.services.find(function(x){return x.kkt;});
+    if(d0){ d0.id="esm-cm-"+ks; d0.desc="Контроллер ККТ · сер. "+ks; d0.st="running"; }
+  }
 }catch(e){}
 function saveSettings(){ try{ localStorage.setItem(LS_KEY, JSON.stringify({interval:S.interval,autoHeal:S.autoHeal,injectFaults:S.injectFaults})); }catch(e){} }
 function saveToken(){ try{ localStorage.setItem(LS_TOK, JSON.stringify({configured:S.configured,tail:S.tokenTail})); }catch(e){} }
@@ -636,7 +679,7 @@ function renderApi(){
     +'<div class="arow"><span class="l">Версия ЛМ</span><span class="v'+(reach?" acc":"")+'">'+(reach?API_VER:"нет связи")+'</span></div>'
     +'<div class="arow"><span class="l">ИНН организации</span><span class="v">'+(S.configured?INN:"—")+'</span></div>'
     +'<div class="arow"><span class="l">Токен сессии</span><span class="v">'+(S.tokenTail?"принят ····"+S.tokenTail:"не задан")+'</span></div>'
-    +'<div class="arow"><span class="l">Серийный № ККТ</span><span class="v">'+KKT+'</span></div>'
+    +'<div class="arow"><span class="l">Серийный № ККТ</span><span class="v'+(S.kktSerial?" acc":"")+'">'+(S.kktSerial||"не задан")+'</span></div>'
     +'<div class="arow"><span class="l">Опросов выполнено</span><span class="v">'+S.totals.polls+'</span></div>'
     +'</div>'
     +'<div style="margin-top:20px"><div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:500 9.5px var(--font-m);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-400)">Отклик API, мс</span><span style="font:700 14px var(--font-m);color:var(--chz-300)">'+(ping!==null?ping:"—")+'</span></div>'
@@ -684,7 +727,57 @@ function renderLog(){
     return '<div class="lrow"><span class="ts">'+fmtClock(e.ts)+'</span><span class="tag '+e.level+'">'+TAGS[e.level]+'</span><span class="msg" title="'+e.msg.replace(/"/g,"&quot;")+'">'+e.msg+'</span></div>';
   }).join("") || '<div style="padding:40px 20px;text-align:center;font:500 11px var(--font-m);color:var(--ink-500)">по выбранному фильтру записей нет</div>';
 }
-function renderAll(){ renderVerdict(); renderServices(); renderApi(); renderOps(); }
+function renderKkt(){
+  var scanning=S.kktScan==="scanning";
+  var badge=$("#kktBadge");
+  badge.className="kktBadge "+(S.kktSerial?"on":"dim");
+  badge.textContent=S.kktSerial?("esm-cm-"+S.kktSerial):"не привязана";
+  $("#kktScanBtn").disabled=scanning;
+  $("#kktApplyBtn").disabled=scanning;
+  $("#kktScanLbl").textContent=scanning?"Опрос…":"Опросить систему";
+  var h,c="var(--ink-400)",led="dim";
+  if(scanning){h="Сканирование COM-портов…";c="var(--warn)";led="warn";}
+  else if(S.kktError){h=S.kktError;c="var(--err)";led="err";}
+  else if(S.kktDetected){h="Обнаружена на "+S.kktDetected.port+" — проверьте номер и нажмите «Применить»";c="var(--chz-400)";led="info";}
+  else if(S.kktSerial){h="Служба esm-cm-"+S.kktSerial+" отслеживается монитором";c="var(--ok)";led="ok";}
+  else{h="Введите номер вручную или нажмите «Опросить систему»";}
+  $("#kktHint").innerHTML='<span class="led '+led+'" style="width:6px;height:6px"></span><span style="color:'+c+'">'+h+'</span>';
+  var inp=$("#kktInput");
+  inp.classList.toggle("err",!!S.kktError);
+  inp.classList.toggle("found",!!S.kktDetected);
+}
+$("#kktScanBtn").addEventListener("click",function(){
+  if(S.kktScan==="scanning")return;
+  S.kktScan="scanning"; S.kktDetected=null; S.kktError=null;
+  log("action","Опрос системы: сканирование COM-портов на наличие подключённой ККТ…");
+  renderKkt();
+  var serial=S.kktSerial||KKT_POOL[Math.floor(Math.random()*KKT_POOL.length)];
+  var port=KKT_PORTS[Math.floor(Math.random()*KKT_PORTS.length)];
+  setTimeout(function(){
+    S.kktScan="idle"; S.kktDetected={serial:serial,port:port};
+    $("#kktInput").value=serial;
+    log("ok","Опрос завершён: на "+port+" обнаружена ККТ АТОЛ, серийный № "+serial);
+    toast("ok","На "+port+" обнаружена ККТ: серийный № "+serial);
+    renderKkt();
+  },1800);
+});
+$("#kktApplyBtn").addEventListener("click",function(){
+  var v=($("#kktInput").value||"").trim().toUpperCase();
+  if(!SERIAL_RE.test(v)){
+    S.kktError="Серийный №: 6–20 символов — цифры и латинские буквы";
+    renderKkt(); return;
+  }
+  S.kktError=null; S.kktDetected=null; S.kktSerial=v;
+  var d=S.services.find(function(x){return x.kkt;});
+  if(d){ d.id="esm-cm-"+v; d.desc="Контроллер ККТ · сер. "+v; d.st="running"; }
+  try{ localStorage.setItem(LS_KKT,v); }catch(e){}
+  log("ok","Контроллер привязан: служба esm-cm-"+v+" · РАБОТАЕТ");
+  toast("ok","ККТ привязана к монитору: esm-cm-"+v);
+  renderAll();
+});
+$("#kktInput").addEventListener("input",function(){ S.kktError=null; renderKkt(); });
+$("#kktInput").addEventListener("keydown",function(e){ if(e.key==="Enter")$("#kktApplyBtn").click(); });
+function renderAll(){ renderVerdict(); renderServices(); renderApi(); renderOps(); renderKkt(); }
 
 /* ---- секундомер: часы, аптайм, прогресс опроса ---- */
 setInterval(function(){
@@ -705,9 +798,11 @@ $("#footL").innerHTML="© "+new Date().getFullYear()+" ООО «Правовой
 $("#footR").textContent="GET /api/v2/status · POST /api/v2/init · "+S.services.length+" служб · интервал "+S.interval/1000+" с";
 var t0=Date.now();
 log("info","Монитор запущен. Целевых служб в реестре: 12");
-log("info","Автопоиск: обнаружена служба ККТ esm-cm-"+KKT+" (серийный № "+KKT+")");
+if(S.kktSerial){ log("ok","Восстановлена привязка ККТ из настроек: esm-cm-"+S.kktSerial); }
+else { log("info","Автопоиск esm-cm*: подключённая ККТ не найдена — привяжите её по серийному №"); }
 if(S.configured)log("ok","Восстановлена сохранённая конфигурация: токен ····"+S.tokenTail);
 log("action","Первичный опрос системы: GET /api/v2/status (localhost:5995)…");
+if(S.kktSerial)$("#kktInput").value=S.kktSerial;
 renderFilters(); renderLog(); renderAll();
 setTimeout(poll,900);
 </script>

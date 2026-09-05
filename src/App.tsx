@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import { makeInitialState, reducer } from "./lib/sim";
+import { KKT_PORTS, KKT_SERIAL_POOL, makeInitialState, reducer } from "./lib/sim";
 import { Header, VerdictStrip } from "./components/header";
 import { ServiceBoard } from "./components/services";
 import { ApiPanel, OpsPanel } from "./components/panels";
@@ -65,6 +65,25 @@ export default function App() {
     eligible.forEach((s, i) => restartOne(s.id, i * 170));
     addToast("info", `Массовый перезапуск: ${eligible.length} служб в очереди`);
   }, [state.services, restartOne, addToast]);
+
+  /* опрос системы: поиск ККТ, подключённой к ПК */
+  const scanKkt = useCallback(() => {
+    dispatch({ type: "KKT_SCAN_START" });
+    const serial = state.kktSerial ?? KKT_SERIAL_POOL[Math.floor(Math.random() * KKT_SERIAL_POOL.length)];
+    const port = KKT_PORTS[Math.floor(Math.random() * KKT_PORTS.length)];
+    window.setTimeout(() => {
+      dispatch({ type: "KKT_SCAN_DONE", serial, port });
+      addToast("ok", `На ${port} обнаружена ККТ: серийный № ${serial}`);
+    }, 1800);
+  }, [state.kktSerial, addToast]);
+
+  const applyKkt = useCallback(
+    (serial: string) => {
+      dispatch({ type: "KKT_APPLY", serial });
+      addToast("ok", `ККТ привязана к монитору: esm-cm-${serial}`);
+    },
+    [addToast]
+  );
 
   const handleInit = useCallback(
     (token: string) => {
@@ -138,7 +157,13 @@ export default function App() {
 
             <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
               <div className="xl:col-span-2">
-                <ServiceBoard state={state} onRestart={restartOne} onRestartAll={restartAll} />
+                <ServiceBoard
+                  state={state}
+                  onRestart={restartOne}
+                  onRestartAll={restartAll}
+                  onScan={scanKkt}
+                  onApplyKkt={applyKkt}
+                />
               </div>
               <ApiPanel
                 state={state}
