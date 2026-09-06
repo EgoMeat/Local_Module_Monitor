@@ -1,512 +1,1055 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
-<meta http-equiv="x-ua-compatible" content="ie=edge">
-<title>Монитор ЛМ · Правовой Статус (ККТ34)</title>
-<HTA:APPLICATION
-  ID="MonLM"
-  APPLICATIONNAME="MonLM"
-  BORDER="thin"
-  BORDERSTYLE="normal"
-  CAPTION="yes"
-  ICON=""
-  MAXIMIZEBUTTON="yes"
-  MINIMIZEBUTTON="yes"
-  SHOWINTASKBAR="yes"
-  SINGLEINSTANCE="yes"
-  SYSMENU="yes"
-  VERSION="2.0"
-  WINDOWSTATE="normal"
-  SCROLL="no"
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>Монитор ЛМ · Правовой Статус (ООО «ККТ34»)</title>
+<hta:application
+  id="KktMon"
+  applicationname="Монитор ЛМ · Правовой Статус (ККТ34)"
+  border="thin"
+  caption="yes"
+  maximizebutton="yes"
+  minimizebutton="yes"
+  showintaskbar="yes"
+  singleinstance="yes"
+  sysmenu="yes"
+  windowstate="normal"
+  scroll="yes"
+  navigable="no"
+  contextmenu="yes"
+  selection="yes"
+  innerborder="no"
 />
-<style>
-  :root{
-    --ink-950:#070d18;--ink-900:#0b1424;--ink-850:#0e1a2e;--ink-800:#132238;
-    --ink-700:#1f3a58;--ink-600:#2c5278;--ink-500:#3e6f9e;--ink-400:#6490b8;
-    --ink-300:#8fb1cf;--ink-200:#b9d1e6;--ink-100:#dfeaf5;--ink-50:#f3f8fc;
-    --brand-400:#fb923c;--brand-500:#f97316;--brand-900:#3d1c07;
-    --chz-300:#8ef0e2;--chz-400:#45d8c3;--chz-900:#07302d;
-    --ok:#34d399;--ok-d:#0a2f22;--warn:#fbbf24;--warn-d:#332407;--err:#f87171;--err-d:#331012;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
+<style type="text/css">
+  *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%}
-  body{background:var(--ink-950);color:var(--ink-100);font-family:'Segoe UI',Tahoma,sans-serif;overflow:auto}
-  button{font-family:inherit;cursor:pointer}
-  ::-webkit-scrollbar{width:10px}::-webkit-scrollbar-thumb{background:var(--ink-700);border-radius:8px}
-  .wrap{max-width:1200px;margin:0 auto;padding:16px 20px 30px}
-  header{display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--ink-700);padding-bottom:14px;margin-bottom:16px}
-  .logo{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(249,115,22,.5);background:var(--brand-900);color:var(--brand-400);font-weight:800;font-size:17px;position:relative;flex:none}
-  .logo b{position:absolute;right:-7px;bottom:-6px;border:1px solid rgba(251,146,60,.6);background:var(--ink-950);padding:0 4px;font-size:8px;letter-spacing:.1em;color:var(--brand-400)}
-  .ht .t1{font-size:15px;font-weight:800;letter-spacing:.16em}
-  .ht .t2{font-size:10px;color:var(--ink-400);letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
-  .hright{margin-left:auto;text-align:right}
-  #clock{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
-  #apiChip{font-size:10px;color:var(--ink-400);margin-top:2px}
-  .verdict{border:1px solid var(--ink-700);background:linear-gradient(160deg,rgba(19,34,56,.9),var(--ink-850));padding:16px 20px;margin-bottom:16px;position:relative;overflow:hidden}
-  .verdict .bar{position:absolute;top:0;left:0;right:0;height:3px;background:var(--ok)}
-  #verdictLabel{font-size:26px;font-weight:800;letter-spacing:.03em;color:var(--ok)}
-  #verdictDetail{font-size:11px;color:var(--ink-300);margin-top:6px}
-  .led{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;vertical-align:middle}
-  .led.ok{background:var(--ok);box-shadow:0 0 8px var(--ok)}
-  .led.warn{background:var(--warn);box-shadow:0 0 8px var(--warn)}
-  .led.err{background:var(--err);box-shadow:0 0 8px var(--err)}
-  .led.info{background:var(--brand-400);box-shadow:0 0 8px var(--brand-400)}
-  .led.dim{background:var(--ink-500)}
-  .cols{display:flex;gap:16px;align-items:flex-start}
-  .col-main{flex:1.6;min-width:0}
-  .col-side{flex:1;min-width:0}
-  .panel{border:1px solid var(--ink-700);background:linear-gradient(160deg,rgba(19,34,56,.85),var(--ink-850));margin-bottom:16px}
-  .phead{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--ink-700);padding:12px 16px}
-  .ptitle{font-size:10px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-300)}
-  .cnt{border:1px solid var(--ink-700);background:var(--ink-900);padding:1px 8px;font-size:10px;color:var(--ink-300)}
-  .btn{border:1px solid var(--ink-600);background:var(--ink-800);color:var(--ink-200);padding:6px 12px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;transition:all .15s}
-  .btn:hover:not(:disabled){border-color:var(--brand-400);color:var(--brand-400)}
-  .btn:disabled{opacity:.5;cursor:not-allowed}
-  .btn.orange{border-color:var(--brand-400);background:var(--brand-500);color:#081120}
-  .btn.orange:hover:not(:disabled){background:var(--brand-400);color:#081120}
-  #svcGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px}
-  .svc{display:flex;align-items:center;gap:10px;border:1px solid var(--ink-700);background:rgba(11,20,36,.55);padding:9px 12px;transition:all .15s}
-  .svc:hover{border-color:var(--ink-600);background:var(--ink-850);transform:translateX(3px)}
-  .svc .mid{flex:1;min-width:0}
-  .svc .id{font-size:12px;font-weight:700;font-family:Consolas,monospace;color:var(--ink-100);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .svc .desc{font-size:10px;color:var(--ink-400);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
-  .svc .st{font-size:9px;font-weight:700;letter-spacing:.06em;white-space:nowrap;font-family:Consolas,monospace}
-  .svc .kkt{border:1px solid rgba(249,115,22,.4);background:var(--brand-900);color:var(--brand-400);font-size:8px;padding:0 4px;margin-left:6px;letter-spacing:.1em}
-  .abtn{width:26px;height:26px;flex:none;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--ink-600);background:var(--ink-800);color:var(--ink-300);font-size:12px;font-weight:800;transition:all .12s}
-  .abtn:hover:not(:disabled){border-color:var(--brand-400);color:var(--brand-400)}
-  .abtn.stop:hover:not(:disabled){border-color:var(--err);color:var(--err)}
-  .abtn:disabled{opacity:.4;cursor:not-allowed}
-  .abtns{display:flex;gap:4px}
-  .apibody{padding:16px}
-  .arow{display:flex;justify-content:space-between;gap:14px;border-bottom:1px solid var(--ink-700);padding:7px 0;font-size:11px}
-  .arow .l{color:var(--ink-400)}
-  .arow .v{font-family:Consolas,monospace;font-weight:700;color:var(--ink-100);text-align:right}
-  .arow .v.acc{color:var(--chz-300)}
-  .tokform{margin-top:14px;border:1px solid rgba(249,115,22,.3);background:rgba(11,20,36,.7);padding:14px}
-  .tokform label{display:block;font-size:11px;font-weight:700;color:var(--ink-200);margin-bottom:8px}
-  .tokform input{width:100%;border:1px solid var(--ink-600);background:var(--ink-950);color:var(--ink-100);padding:9px 12px;font-size:12px;font-family:Consolas,monospace}
-  .tokform input:focus{outline:1px solid var(--brand-500)}
-  #initBox{margin-top:14px;border:1px solid var(--ink-700);background:rgba(11,20,36,.7);padding:14px;font-size:11px}
-  #initBox .big{font-size:13px;font-weight:800}
-  #initBox .kv{display:flex;justify-content:space-between;border-bottom:1px solid var(--ink-800);padding:4px 0;font-family:Consolas,monospace;font-size:10px}
-  #initBox .kv .k{color:var(--ink-400)}
-  #initBox .kv .v{color:var(--chz-300)}
-  #logList{max-height:240px;overflow-y:auto}
-  .lrow{display:flex;gap:10px;align-items:baseline;border-bottom:1px solid var(--ink-800);padding:6px 16px;font-family:Consolas,monospace;font-size:10px}
-  .lrow .ts{color:var(--ink-400);flex:none;width:64px}
-  .lrow .tag{flex:none;border:1px solid;padding:0 6px;font-size:8px;font-weight:800;letter-spacing:.08em}
-  .tag.action{border-color:rgba(249,115,22,.4);background:var(--brand-900);color:var(--brand-400)}
-  .tag.ok{border-color:rgba(52,211,153,.4);background:var(--ok-d);color:#86efac}
-  .tag.warn{border-color:rgba(245,158,11,.4);background:var(--warn-d);color:#fde68a}
-  .tag.error{border-color:rgba(239,68,68,.4);background:var(--err-d);color:#fca5a5}
-  .tag.info{border-color:var(--ink-600);background:var(--ink-800);color:var(--ink-300)}
-  .lrow .msg{color:var(--ink-200);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .pfoot{border-top:1px solid var(--ink-700);padding:10px 16px;font-size:9px;color:var(--ink-500);line-height:1.6}
-  footer{text-align:center;font-size:9px;color:var(--ink-500);margin-top:8px}
-  footer b{color:var(--brand-400)}
+  body{
+    background:#070d18;color:#dfeaf5;
+    font-family:'Segoe UI',Tahoma,Verdana,sans-serif;font-size:13px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:Consolas,'Courier New',monospace}
+  ::selection{background:#f97316;color:#070d18}
+  button{font-family:'Segoe UI',Tahoma,sans-serif;cursor:pointer}
+  button:disabled{cursor:default;opacity:.5}
+  input{font-family:Consolas,'Courier New',monospace}
+
+  /* фоновые слои (чистый CSS, без переменных) */
+  #bg{position:fixed;left:0;top:0;right:0;bottom:0;overflow:hidden;z-index:0}
+  #bg .g1{position:absolute;width:560px;height:560px;left:-180px;top:-180px;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='560' height='560'%3E%3Cdefs%3E%3CradialGradient id='a'%3E%3Cstop offset='0' stop-color='%23f97316' stop-opacity='.13'/%3E%3Cstop offset='1' stop-color='%23f97316' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='560' height='560' fill='url(%23a)'/%3E%3C/svg%3E") no-repeat;}
+  #bg .g2{position:absolute;width:620px;height:620px;right:-200px;bottom:-220px;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='620' height='620'%3E%3Cdefs%3E%3CradialGradient id='b'%3E%3Cstop offset='0' stop-color='%231fb9a8' stop-opacity='.11'/%3E%3Cstop offset='1' stop-color='%231fb9a8' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='620' height='620' fill='url(%23b)'/%3E%3C/svg%3E") no-repeat;}
+  #bg .grid{position:absolute;left:0;top:0;right:0;bottom:0;
+    background-image:
+      linear-gradient(rgba(62,111,158,.10) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(62,111,158,.10) 1px,transparent 1px);
+    background-size:46px 46px;}
+  #bg .scan{position:absolute;left:0;right:0;height:170px;
+    background:linear-gradient(to bottom,transparent,rgba(249,115,22,.07),transparent);
+    animation:band 11s linear infinite;}
+  @keyframes band{0%{top:-15%}100%{top:115%}}
+
+  #app{position:relative;z-index:1;min-height:100%}
+
+  /* шапка */
+  header{position:relative;border-bottom:1px solid #1f3a58;background:#0b1424;zoom:1}
+  header:after{content:"";display:block;clear:both}
+  .hwrap{max-width:1440px;margin:0 auto;padding:12px 22px}
+  .hleft{float:left}
+  .hlogo{float:left;width:46px;height:46px;border:1px solid rgba(249,115,22,.5);background:#3d1c07;color:#fb923c;
+    text-align:center;line-height:44px;position:relative;margin-right:12px}
+  .hlogo b{position:absolute;right:-8px;bottom:-6px;border:1px solid #fb923c;background:#070d18;color:#fb923c;
+    font:700 8px/1.7 Consolas,monospace;letter-spacing:.12em;padding:0 3px}
+  .hname{float:left;padding-top:2px}
+  .hname .t1{font-size:16px;font-weight:700;letter-spacing:.16em;color:#f3f8fc}
+  .hname .t2{font:500 10px Consolas,monospace;letter-spacing:.08em;color:#6490b8;text-transform:uppercase;margin-top:2px}
+  .hright{float:right;padding-top:4px}
+  .hstat{float:left;border:1px solid #1f3a58;background:#0e1a2e;padding:6px 11px;margin-left:10px;
+    font:600 12px Consolas,monospace;color:#b9d1e6}
+  .hbadge{float:left;border:1px solid #1f3a58;background:#0e1a2e;padding:6px 11px;margin-left:10px;font:500 10px Consolas,monospace}
+  .hbadge .a{color:#fb923c;font-weight:700}.hbadge .c{color:#45d8c3;font-weight:700}.hbadge .sep{color:#2c5278}
+  .btn{display:inline-block;border:1px solid #2c5278;background:#132238;color:#b9d1e6;padding:7px 13px;
+    font:600 11px 'Segoe UI',sans-serif;letter-spacing:.08em;text-transform:uppercase}
+  .btn:hover:not(:disabled){border-color:#f97316;color:#ffb27d;background:#172a44}
+  .btn-o{border-color:#fb923c;background:#f97316;color:#081120;font-weight:700}
+  .btn-o:hover:not(:disabled){background:#fb923c;color:#081120}
+  .btn-t{border-color:rgba(31,185,168,.55);background:#07302d;color:#8ef0e2}
+  .btn-t:hover:not(:disabled){border-color:#45d8c3;color:#8ef0e2;background:#0a423d}
+
+  /* светодиод */
+  .led{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:middle;
+    animation:pulse 2.2s ease-in-out infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.25)}70%{box-shadow:0 0 0 7px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
+  .led.ok{background:#34d399}.led.warn{background:#fbbf24}.led.err{background:#f87171;animation:blink .9s steps(2,start) infinite}
+  .led.info{background:#fb923c}.led.dim{background:#3e6f9e;animation:none}
+  @keyframes blink{50%{opacity:.25}}
+
+  main{max-width:1440px;margin:0 auto;padding:22px}
+
+  .panel{position:relative;border:1px solid #1f3a58;margin-bottom:20px;
+    background:#0e1a2e;
+    background:linear-gradient(160deg,rgba(19,34,56,.94),#0e1a2e);
+    box-shadow:0 18px 40px -24px rgba(0,0,0,.75);
+    animation:rise .55s cubic-bezier(.22,1,.36,1) both;}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .phead{border-bottom:1px solid #1f3a58;padding:14px 20px;zoom:1}
+  .phead:after{content:"";display:block;clear:both}
+  .ptitle{float:left;font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#8fb1cf;padding-top:4px}
+  .ptitle svg{vertical-align:-3px;margin-right:8px}
+  .pfoot{border-top:1px solid rgba(31,58,88,.7);padding:9px 20px;font:500 10px Consolas,monospace;color:#6490b8}
+
+  .cols{zoom:1}
+  .cols:after{content:"";display:block;clear:both}
+  .colA{float:left;width:63%}
+  .colB{float:left;width:35%;margin-left:2%}
+
+  /* вердикт */
+  #verdict{overflow:hidden}
+  #verdictTop{position:absolute;left:0;right:0;top:0;height:3px;background:#34d399}
+  .vwrap{padding:26px 26px 24px;zoom:1}
+  .vwrap:after{content:"";display:block;clear:both}
+  .vleft{float:left;max-width:52%}
+  .vright{float:right;width:46%}
+  #verdictLabel{font-size:40px;font-weight:700;letter-spacing:.03em;line-height:1;color:#34d399;margin-top:10px}
+  #verdictDetail{margin-top:11px;font:500 12px Consolas,monospace;color:#8fb1cf}
+  .chips{zoom:1}
+  .chips:after{content:"";display:block;clear:both}
+  .chip{float:left;width:23.5%;margin-left:2%;border:1px solid #1f3a58;background:rgba(11,20,36,.7);padding:8px 12px}
+  .chip:first-child{margin-left:0}
+  .chip .l{font:500 9px Consolas,monospace;letter-spacing:.14em;text-transform:uppercase;color:#6490b8}
+  .chip .v{margin-top:3px;font:700 14px Consolas,monospace;color:#dfeaf5}
+  .pollrow{margin-top:14px;zoom:1}
+  .pollrow:after{content:"";display:block;clear:both}
+  .pollrow .btn{float:left}
+  .pbar{margin-left:172px;padding-top:2px}
+  .pbar .track{height:6px;background:#132238;position:relative;overflow:hidden}
+  .pbar .fill{position:absolute;left:0;top:0;bottom:0;width:0;background:#fb923c;transition:width 1s linear}
+  .pbar .hint{margin-top:6px;font:500 10.5px Consolas,monospace;color:#6490b8}
+
+  /* службы */
+  .svcCols{padding:14px 16px;zoom:1}
+  .svcCols:after{content:"";display:block;clear:both}
+  .svcCol{float:left;width:50%}
+  .svc{margin:0 6px 8px;border:1px solid rgba(31,58,88,.7);background:rgba(11,20,36,.55);padding:9px 11px;zoom:1;
+    transition:border-color .18s,background .18s}
+  .svc:hover{border-color:#2c5278;background:#0e1a2e}
+  .svc:after{content:"";display:block;clear:both}
+  .svc .led{float:left;margin:6px 10px 0 0}
+  .svc .mid{display:block;overflow:hidden;margin-right:118px}
+  .svc .id{font:700 12.5px Consolas,monospace;color:#dfeaf5;white-space:nowrap;overflow:hidden}
+  .svc .id .kkt{border:1px solid rgba(249,115,22,.45);background:#3d1c07;color:#ffb27d;font:700 8px Consolas,monospace;
+    letter-spacing:.1em;padding:1px 4px;margin-left:6px;vertical-align:2px}
+  .svc .desc{font-size:10.5px;color:#6490b8;white-space:nowrap;overflow:hidden;margin-top:1px}
+  .svc .st{float:right;font:700 10px Consolas,monospace;letter-spacing:.06em;margin-top:1px;text-align:right;width:96px}
+  .svc .acts{float:right;width:66px;text-align:right;margin-top:7px}
+  .svc .acts .mini{display:inline-block;width:26px;height:24px;border:1px solid #2c5278;background:#132238;color:#8fb1cf;
+    font:700 11px Consolas,monospace;margin-left:3px;line-height:20px;text-align:center;vertical-align:middle}
+  .svc .acts .mini:hover:not(:disabled){border-color:#f97316;color:#ffb27d;background:#3d1c07}
+  .svc .acts .mini.stop:hover:not(:disabled){border-color:#ef4444;color:#fca5a5;background:#331012}
+  .st-ok{color:#34d399}.st-err{color:#f87171}.st-warn{color:#fbbf24}.st-dim{color:#3e6f9e}
+
+  /* строка серийника */
+  .kktbar{border-bottom:1px solid #1f3a58;background:rgba(11,20,36,.45);padding:13px 20px;zoom:1}
+  .kktbar:after{content:"";display:block;clear:both}
+  .kktbar .lab{float:left;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#8fb1cf;padding-top:6px}
+  .kktbar .badge{float:left;margin:3px 0 0 12px;border:1px solid #2c5278;background:#132238;color:#6490b8;
+    font:500 10px Consolas,monospace;padding:3px 8px}
+  .kktbar .badge.on{border-color:rgba(52,211,153,.45);background:#0a2f22;color:#86efac}
+  .kktbar .ctrl{float:right}
+  .kktbar input{width:210px;height:30px;border:1px solid #2c5278;background:#070d18;color:#dfeaf5;padding:0 10px;
+    font-size:12px;vertical-align:middle}
+  .kktbar input:focus{outline:none;border-color:#f97316}
+  .kktbar .btn{margin-left:8px;padding:6px 12px}
+  .kkthint{clear:both;padding-top:9px;font:500 10.5px Consolas,monospace;color:#6490b8}
+
+  /* api */
+  .apibody{padding:18px 20px}
+  .aline{zoom:1;padding:7px 0;border-bottom:1px solid rgba(31,58,88,.5)}
+  .aline:after{content:"";display:block;clear:both}
+  .aline .l{float:left;font-size:11px;color:#6490b8}
+  .aline .v{float:right;font:700 12px Consolas,monospace;color:#dfeaf5;text-align:right}
+  .v.acc{color:#8ef0e2}
+  .statline{padding:2px 0 12px}
+  .statline .txt{font:700 13px Consolas,monospace}
+
+  /* инициализация */
+  .initbox{margin-top:16px;border:1px solid rgba(245,158,11,.3);background:rgba(11,20,36,.7);padding:14px}
+  .initbox label{display:block;font:600 11px 'Segoe UI',sans-serif;color:#b9d1e6;margin-bottom:8px}
+  .initbox input{width:100%;height:32px;border:1px solid #2c5278;background:#070d18;color:#dfeaf5;padding:0 10px;font-size:12px}
+  .initbox input:focus{outline:none;border-color:#f97316}
+  .initbtns{margin-top:11px;zoom:1}
+  .initbtns:after{content:"";display:block;clear:both}
+  .initbtns .btn{float:left;margin-right:8px}
+  #initStatus{margin-top:11px;font:600 11px Consolas,monospace;color:#8fb1cf;min-height:15px}
+  #initFields{margin-top:9px;border:1px solid rgba(31,58,88,.7);background:#070d18;padding:9px 11px;
+    font:500 10.5px/1.7 Consolas,monospace;color:#8fb1cf;white-space:pre-wrap;max-height:130px;overflow:auto;display:none}
+  .okbox{margin-top:11px;border:1px solid rgba(52,211,153,.4);background:#0a2f22;padding:12px 14px;display:none}
+  .okbox .t{font:700 12px Consolas,monospace;color:#86efac}
+  .okbox .d{margin-top:5px;font:500 10.5px/1.6 Consolas,monospace;color:#8fb1cf;white-space:pre-wrap;max-height:150px;overflow:auto}
+
+  /* журнал */
+  #logList{max-height:290px;overflow:auto}
+  .lrow{border-bottom:1px solid rgba(14,26,46,.85);padding:6px 18px;zoom:1}
+  .lrow:hover{background:rgba(14,26,46,.7)}
+  .lrow:after{content:"";display:block;clear:both}
+  .lrow .ts{float:left;width:76px;font:500 10.5px Consolas,monospace;color:#6490b8}
+  .lrow .tag{float:left;width:86px;text-align:center;border:1px solid #2c5278;background:#132238;color:#8fb1cf;
+    font:700 8.5px/1.9 Consolas,monospace;letter-spacing:.1em;margin-right:12px}
+  .lrow .msg{display:block;overflow:hidden;font:500 11.5px Consolas,monospace;color:#b9d1e6;white-space:nowrap}
+  .tag.action{border-color:rgba(249,115,22,.45);background:#3d1c07;color:#ffb27d}
+  .tag.ok{border-color:rgba(52,211,153,.45);background:#0a2f22;color:#86efac}
+  .tag.warn{border-color:rgba(245,158,11,.45);background:#332407;color:#fde68a}
+  .tag.error{border-color:rgba(239,68,68,.45);background:#331012;color:#fca5a5}
+  .fbtn{border:1px solid transparent;background:none;color:#6490b8;padding:4px 9px;font:600 10px 'Segoe UI',sans-serif;margin-left:2px}
+  .fbtn:hover{border-color:#2c5278;color:#b9d1e6}
+  .fbtn.on{border-color:rgba(249,115,22,.6);background:#3d1c07;color:#ffb27d}
+  .ibtn{width:26px;height:26px;border:1px solid #2c5278;background:#132238;color:#8fb1cf;font:700 12px Consolas,monospace;vertical-align:middle;margin-left:6px}
+  .ibtn:hover{border-color:rgba(239,68,68,.55);color:#fca5a5;background:#331012}
+
+  /* параметры */
+  .opsbody{padding:14px 16px}
+  .statgrid{zoom:1;margin-bottom:10px}
+  .statgrid:after{content:"";display:block;clear:both}
+  .stat{float:left;width:48.5%;margin:0 0 8px 3%;border:1px solid rgba(31,58,88,.7);background:rgba(11,20,36,.55);padding:9px 11px}
+  .stat:nth-child(odd){margin-left:0}
+  .stat .l{font:500 9px Consolas,monospace;letter-spacing:.14em;text-transform:uppercase;color:#6490b8}
+  .stat .v{margin-top:3px;font:700 18px Consolas,monospace;color:#dfeaf5}
+  .orow{display:block;width:100%;text-align:left;border:1px solid rgba(31,58,88,.7);background:rgba(11,20,36,.55);
+    padding:10px 12px;margin-bottom:8px;zoom:1;color:#dfeaf5}
+  .orow:after{content:"";display:block;clear:both}
+  button.orow:hover{background:#0e1a2e;border-color:#2c5278}
+  .orow .t{font:600 12px 'Segoe UI',sans-serif}
+  .orow .h{font:500 10px Consolas,monospace;color:#6490b8;margin-top:1px}
+  .orow .stx{float:right;font:700 10px Consolas,monospace;letter-spacing:.12em;padding-top:8px}
+  .sw{float:left;width:36px;height:20px;border:1px solid #2c5278;background:#132238;position:relative;margin-right:12px}
+  .sw i{position:absolute;top:2px;left:2px;width:14px;height:14px;background:#6490b8}
+  .sw.on{border-color:rgba(52,211,153,.7);background:#0a2f22}
+  .sw.on i{left:18px;background:#34d399}
+  .sw.on.danger{border-color:rgba(245,158,11,.7);background:#332407}
+  .sw.on.danger i{background:#fbbf24}
+  .ivbtn{border:1px solid #2c5278;background:#132238;color:#8fb1cf;padding:5px 10px;font:700 11px Consolas,monospace;margin-left:4px}
+  .ivbtn:hover{border-color:#3e6f9e;color:#dfeaf5}
+  .ivbtn.on{border-color:rgba(249,115,22,.7);background:#3d1c07;color:#ffb27d}
+
+  footer{max-width:1440px;margin:0 auto;padding:0 22px 22px;font:500 10px Consolas,monospace;color:#6490b8;zoom:1}
+  footer:after{content:"";display:block;clear:both}
+  footer .r{float:right}
+  footer b{color:#fb923c;font-weight:600}
 </style>
 </head>
 <body>
-<div class="wrap">
 
+<div id="bg">
+  <div class="g1"></div><div class="g2"></div><div class="grid"></div><div class="scan"></div>
+</div>
+
+<div id="app">
   <header>
-    <div class="logo">&#9878;<b>ККТ34</b></div>
-    <div class="ht">
-      <div class="t1">МОНИТОР ЛМ</div>
-      <div class="t2">«Правовой Статус» · Волгоград · сервис АТОЛ · реальный режим</div>
-    </div>
-    <div class="hright">
-      <div id="clock">--:--:--</div>
-      <div id="apiChip">ЛМ: опрос…</div>
+    <div class="hwrap">
+      <div class="hleft">
+        <div class="hlogo">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.3 20 5.1v6.2c0 5.2-3.3 8.9-8 10.4-4.7-1.5-8-5.2-8-10.4V5.1L12 2.3Z"/><path d="M12 6.6v9.6M9.4 16.2h5.2M7.2 8.6h9.6"/><path d="m7.2 8.6-1.9 3.7M7.2 8.6l1.9 3.7M5.1 12.3a2.1 2.1 0 0 0 4.2 0"/><path d="m16.8 8.6-1.9 3.7M16.8 8.6l1.9 3.7M14.7 12.3a2.1 2.1 0 0 0 4.2 0"/></svg>
+          <b>ККТ34</b>
+        </div>
+        <div class="hname">
+          <div class="t1">МОНИТОР ЛМ</div>
+          <div class="t2">«Правовой Статус» · Волгоград · сервис АТОЛ</div>
+        </div>
+      </div>
+      <div class="hright">
+        <div class="hbadge"><span class="a">АТОЛ</span> <span class="sep">|</span> <span class="c">Честный ЗНАК</span></div>
+        <div class="hstat"><span class="led info" style="width:8px;height:8px;margin-right:7px"></span><span id="apiChip">ЛМ —</span></div>
+        <div class="hstat"><span class="led ok" style="width:8px;height:8px;margin-right:7px"></span><span id="svcChip">—</span></div>
+        <div class="hstat" id="clock">--:--:--</div>
+      </div>
     </div>
   </header>
 
-  <div class="verdict">
-    <div class="bar" id="verdictBar"></div>
-    <div><span class="led info" id="verdictLed"></span><span id="verdictLabel">ОПРОС СИСТЕМЫ</span></div>
-    <div id="verdictDetail">Читаем реальные статусы служб Windows и состояние ЛМ…</div>
-  </div>
-
-  <div class="cols">
-    <div class="col-main">
-
-      <div class="panel">
-        <div class="phead">
-          <span class="ptitle">Службы реестра Windows</span>
-          <span class="cnt" id="svcCount">—</span>
-          <span style="margin-left:auto"></span>
-          <button class="btn orange" id="refreshBtn" onclick="pollServices()">Обновить</button>
-          <button class="btn" id="restartAllBtn" onclick="restartAll()">Рестарт всех</button>
-        </div>
-        <div id="svcGrid"></div>
-        <div class="pfoot">
-          Реальные статусы через <b style="color:var(--chz-400)">Get-Service</b>. Кнопки
-          <b style="color:var(--chz-400)">&#9632;</b> (стоп) и <b style="color:var(--chz-400)">&#8635;</b> (рестарт)
-          выполняют <b style="color:var(--chz-400)">Stop-Service / Restart-Service</b>. Служба ККТ
-          <b style="color:var(--chz-400)">esm-cm-*</b> подтягивается автоматически по серийному номеру.
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="phead">
-          <span class="ptitle">Журнал реальных событий</span>
-          <span class="cnt" id="logCount">0</span>
-          <span style="margin-left:auto"></span>
-          <button class="btn" onclick="clearLog()">Очистить</button>
-        </div>
-        <div id="logList"></div>
-      </div>
-
-    </div>
-
-    <div class="col-side">
-      <div class="panel">
-        <div class="phead">
-          <span class="ptitle">API ЛМ Честного ЗНАКа</span>
-          <span class="cnt">:5995</span>
-          <span style="margin-left:auto"></span>
-          <button class="btn" onclick="pollLM()">Опрос</button>
-        </div>
-        <div class="apibody">
-          <div><span class="led info" id="apiLed"></span><span id="apiStatus" style="font-size:12px;font-weight:700">Опрос…</span></div>
-          <div style="margin-top:12px">
-            <div class="arow"><span class="l">Версия ЛМ</span><span class="v acc" id="lmVersion">—</span></div>
-            <div class="arow"><span class="l">ИНН организации</span><span class="v" id="lmInn">—</span></div>
-            <div class="arow"><span class="l">Статус модуля</span><span class="v" id="lmState">—</span></div>
-            <div class="arow"><span class="l">Отклик, мс</span><span class="v" id="lmPing">—</span></div>
-            <div class="arow"><span class="l">Опросов</span><span class="v" id="lmPolls">0</span></div>
+  <main>
+    <section class="panel" id="verdict">
+      <div id="verdictTop"></div>
+      <div class="vwrap">
+        <div class="vleft">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#8fb1cf">
+            <span class="led info" id="verdictLed" style="width:13px;height:13px;margin-right:9px"></span>Сводный статус системы
           </div>
-
-          <div class="tokform">
-            <label>Токен инициализации ЛМ ЧЗ</label>
-            <input id="tokInput" placeholder="Вставьте токен из ЛК Честного ЗНАКа…" />
-            <div style="margin-top:10px">
-              <button class="btn orange" id="initBtn" style="width:100%" onclick="doInit()">Запустить инициализацию</button>
+          <div id="verdictLabel">ОПРОС СИСТЕМЫ</div>
+          <div id="verdictDetail">установление связи с локальным модулем…</div>
+        </div>
+        <div class="vright">
+          <div class="chips">
+            <div class="chip"><div class="l">Службы</div><div class="v" id="chipSvcs">—</div></div>
+            <div class="chip"><div class="l">API :5995</div><div class="v" id="chipApi">—</div></div>
+            <div class="chip"><div class="l">Отклик</div><div class="v" id="chipPing">—</div></div>
+            <div class="chip"><div class="l">Опрос</div><div class="v" id="chipPolls">—</div></div>
+          </div>
+          <div class="pollrow">
+            <button class="btn btn-o" id="pollBtn" type="button">⟳&nbsp; Опросить сейчас</button>
+            <div class="pbar">
+              <div class="track"><div class="fill" id="pollFill"></div></div>
+              <div class="hint" id="pollHint">ожидание первого опроса…</div>
             </div>
           </div>
-
-          <div id="initBox" style="display:none"></div>
         </div>
-        <div class="pfoot">Реальные запросы к <b style="color:var(--chz-400)">http://localhost:5995/api/v2/…</b> (Basic admin:admin). HTA обращается к ЛМ напрямую, без CORS.</div>
+      </div>
+    </section>
+
+    <div class="cols">
+      <div class="colA">
+        <section class="panel">
+          <div class="phead">
+            <span class="ptitle">Состояние служб (реальные данные SCM)</span>
+            <span style="float:right">
+              <button class="btn" id="restartAllBtn" type="button">⟳⟳&nbsp; Рестарт всех</button>
+            </span>
+          </div>
+          <div class="kktbar">
+            <span class="lab">Серийный № ККТ</span>
+            <span class="badge" id="kktBadge">не привязана</span>
+            <span class="ctrl">
+              <input id="kktInput" type="text" spellcheck="false" autocomplete="off" placeholder="например: 100412345678">
+              <button class="btn btn-o" id="kktApplyBtn" type="button">Применить</button>
+            </span>
+            <div class="kkthint" id="kktHint">Введите серийный № — монитор добавит службу esm-cm-&lt;номер&gt; в реальный опрос</div>
+          </div>
+          <div class="svcCols" id="svcCols">
+            <div class="svcCol" id="svcColL"></div>
+            <div class="svcCol" id="svcColR"></div>
+          </div>
+          <div class="pfoot" id="svcFoot">Get-Service → ожидание первого опроса…</div>
+        </section>
+
+        <section class="panel">
+          <div class="phead">
+            <span class="ptitle">Журнал событий</span>
+            <span style="float:right">
+              <span id="logFilters"></span>
+              <button class="ibtn" id="clearLogBtn" type="button" title="Очистить журнал">×</button>
+            </span>
+          </div>
+          <div id="logList"></div>
+        </section>
+      </div>
+
+      <div class="colB">
+        <section class="panel">
+          <div class="phead">
+            <span class="ptitle">API Честного ЗНАКа</span>
+            <span style="float:right;border:1px solid #1f3a58;background:#0b1424;padding:4px 8px;font:500 10px Consolas,monospace;color:#8fb1cf">127.0.0.1:5995</span>
+          </div>
+          <div class="apibody">
+            <div class="statline">
+              <span class="led info" id="apiLed" style="margin-right:9px"></span>
+              <span class="txt" id="apiStatusTxt" style="color:#fb923c">Опрос системы…</span>
+            </div>
+            <div class="aline"><span class="l">Версия ЛМ</span><span class="v acc" id="apiVersion">—</span></div>
+            <div class="aline"><span class="l">ИНН организации</span><span class="v" id="apiInn">—</span></div>
+            <div class="aline"><span class="l">Статус модуля</span><span class="v" id="apiModStatus">—</span></div>
+            <div class="aline"><span class="l">Серийный № ККТ</span><span class="v" id="apiSerial">—</span></div>
+            <div class="aline"><span class="l">Отклик, мс</span><span class="v acc" id="apiMs">—</span></div>
+            <div class="aline"><span class="l">Опросов</span><span class="v" id="apiPolls">0</span></div>
+
+            <div class="initbox">
+              <label>Токен (введите, если модуль ещё не настроен)</label>
+              <input id="tokInput" type="text" spellcheck="false" autocomplete="off" placeholder="Токен из личного кабинета ЧЗ…">
+              <div class="initbtns">
+                <button class="btn btn-o" id="initBtn" type="button">Запустить инициализацию</button>
+                <button class="btn" id="initResetBtn" type="button">Сброс</button>
+              </div>
+              <div id="initStatus"></div>
+              <div id="initFields"></div>
+              <div class="okbox" id="initOk">
+                <div class="t" id="initOkT">✓ Инициализация прошла успешно</div>
+                <div class="d" id="initOkD"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="phead"><span class="ptitle">Параметры и счётчики</span></div>
+          <div class="opsbody">
+            <div class="statgrid">
+              <div class="stat"><div class="l">Аптайм монитора</div><div class="v" id="stUp" style="color:#ffb27d">00:00:00</div></div>
+              <div class="stat"><div class="l">Рестартов вручную</div><div class="v" id="stRestarts">0</div></div>
+              <div class="stat"><div class="l">Авто-подъёмов</div><div class="v" id="stAuto" style="color:#fde68a">0</div></div>
+              <div class="stat"><div class="l">Ошибок PowerShell</div><div class="v" id="stErr">0</div></div>
+            </div>
+            <div class="orow" style="cursor:default">
+              <div style="overflow:hidden">
+                <div class="t">Интервал опроса</div>
+                <div class="h">таймер обновления служб и API</div>
+              </div>
+              <span style="float:right;margin-top:-26px">
+                <button class="ivbtn" data-iv="2" type="button">2с</button>
+                <button class="ivbtn on" data-iv="4" type="button">4с</button>
+                <button class="ivbtn" data-iv="10" type="button">10с</button>
+              </span>
+            </div>
+            <button class="orow" id="healBtn" type="button">
+              <span class="sw on" id="healSw"><i></i></span>
+              <span style="overflow:hidden;display:block"><span class="t">Авто-восстановление</span><br>
+              <span class="h">Start-Service при обнаружении остановки</span></span>
+              <span class="stx" id="healStx" style="color:#34d399">ВКЛ</span>
+            </button>
+          </div>
+          <div class="pfoot">«Правовой Статус» · ООО «ККТ34» · kkt34.ru<br>HTA · PowerShell · WinHTTP — реальные данные, без симуляции</div>
+        </section>
       </div>
     </div>
-  </div>
+  </main>
 
-  <footer>© <span id="yr"></span> ООО «Правовой Статус» (ККТ34) · <b>kkt34.ru</b> · г. Волгоград · режим реальных запросов, демо-данные отключены</footer>
+  <footer>
+    <span id="footL"></span>
+    <span class="r" id="footR"></span>
+  </footer>
 </div>
 
-<script language="JScript">
-/* ================= Монитор ЛМ · реальный режим ================= */
-var LM = "http://localhost:5995";
-var AUTH = "Basic YWRtaW46YWRtaW4=";
-var BASE = ["regime","yenisei","atol-service-agent","atol-service-agent-gui","atol-service-agent-updater","atol-grpc-service","epc-bridge","esm-lm-controller","esm-orchestrator","uem-agent","uem-updater"];
-var INTERVAL = 4000;
-var shell = new ActiveXObject("WScript.Shell");
-var services = {};      /* id -> {id, desc, status} */
-var dynKkt = [];        /* найденные esm-cm-* */
-var logArr = [];
-var polls = 0, reqCount = 0, errCount = 0;
-var apiState = "boot", lmVersion = null, lmInn = null, lastPing = null;
-var pendingExec = null; /* асинхронный PowerShell-процесс */
-var initRunning = false;
+<script type="text/javascript">
+/* ================================================================
+   Монитор ЛМ · Правовой Статус (ООО «ККТ34») · автономный инструмент
+   Только реальные данные: Get-Service / Stop-Service / Start-Service
+   через PowerShell и прямые HTTP-запросы к ЛМ (127.0.0.1:5995).
+   Код ES5 — совместим с движком HTA (Trident).
+   ================================================================ */
 
-window.resizeTo(1240, 820);
-document.getElementById("yr").innerHTML = new Date().getFullYear();
+var BASE_SERVICES = [
+  {id:"regime",desc:"Служба фискального режима"},
+  {id:"yenisei",desc:"Транспорт обмена с ОФД"},
+  {id:"atol-service-agent",desc:"Агент сервисов АТОЛ"},
+  {id:"atol-service-agent-gui",desc:"GUI-оболочка агента"},
+  {id:"atol-service-agent-updater",desc:"Канал обновлений агента"},
+  {id:"atol-grpc-service",desc:"gRPC-шлюз АТОЛ"},
+  {id:"epc-bridge",desc:"Мост электронных чеков"},
+  {id:"esm-lm-controller",desc:"Контроллер локального модуля"},
+  {id:"esm-orchestrator",desc:"Оркестратор ESM"},
+  {id:"uem-agent",desc:"Агент UEM"},
+  {id:"uem-updater",desc:"Канал обновлений UEM"}
+];
 
-/* ---- журнал ---- */
+var LM_URL = "http://127.0.0.1:5995";
+var LM_AUTH = "Basic YWRtaW46YWRtaW4="; /* admin:admin — как в обработке */
+
+var S = {
+  services: [],            /* [{id,desc,dyn,el:{row,led,st},status,seen}] */
+  svcByName: {},
+  api: "boot", apiVersion: null, apiInn: null, apiMs: null, apiHttpStatus: null,
+  lastPoll: null, interval: 4000, autoHeal: true,
+  kktSerial: null,
+  logs: [], logFilter: "all",
+  totals: {polls:0, restarts:0, autoStarts:0, psErrors:0},
+  init: {busy:false, timer:null, polls:0},
+  startTs: new Date().getTime()
+};
+
+/* ---------- утилиты ---------- */
+function $(id){ return document.getElementById(id); }
+function trim(s){ return String(s).replace(/^\s+|\s+$/g,""); }
+function pad2(n){ return (n<10?"0":"")+n; }
+function fmtClock(d){ return pad2(d.getHours())+":"+pad2(d.getMinutes())+":"+pad2(d.getSeconds()); }
+function fmtUp(ms){
+  var s=Math.floor(ms/1000);
+  return pad2(Math.floor(s/3600))+":"+pad2(Math.floor(s%3600/60))+":"+pad2(s%60);
+}
+function esc(s){
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+try{ window.resizeTo(1220,840);
+  window.moveTo(Math.max(0,(screen.width-1220)/2),Math.max(0,(screen.height-840)/2));
+}catch(e){}
+
+/* ---------- PowerShell (реальные команды) ---------- */
+var SHELL = new ActiveXObject("WScript.Shell");
+var PS_EXE = SHELL.ExpandEnvironmentStrings("%SystemRoot%") + "\\System32\\WindowsPowerShell\\v1.0\\powershell.exe";
+
+function ps(cmd){
+  var t0 = new Date().getTime();
+  try{
+    var e = SHELL.Exec('"'+PS_EXE+'" -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -Command "'+cmd+'"');
+    var out = e.StdOut.ReadAll();
+    var err = "";
+    try{ err = e.StdErr.ReadAll(); }catch(x){}
+    return {ok:true, out:out, err:err, ms:new Date().getTime()-t0};
+  }catch(ex){
+    S.totals.psErrors++;
+    return {ok:false, out:"", err:String(ex.message||ex), ms:new Date().getTime()-t0};
+  }
+}
+
+/* ---------- WinHTTP к ЛМ (без CORS-ограничений) ---------- */
+function http(method, path, body){
+  var t0 = new Date().getTime();
+  try{
+    var x = new ActiveXObject("WinHttp.WinHttpRequest.5.1");
+    x.SetTimeouts(2000,2000,5000,5000);
+    x.Open(method, LM_URL+path+(path.indexOf("?")>=0?"&":"?")+"_="+(new Date()).getTime(), false);
+    x.SetRequestHeader("Authorization", LM_AUTH);
+    if(body !== undefined){
+      x.SetRequestHeader("Content-Type","application/json");
+      x.Send(body);
+    }else{
+      x.Send();
+    }
+    return {status:x.Status, text:x.ResponseText, ms:new Date().getTime()-t0, err:null};
+  }catch(ex){
+    return {status:0, text:"", ms:new Date().getTime()-t0, err:String(ex.message||ex)};
+  }
+}
+function parseJson(t){
+  try{ return JSON.parse(t); }catch(e){ return null; }
+}
+function flatFields(d){
+  var out = [];
+  if(!d || typeof d !== "object") return out;
+  for(var k in d){
+    if(!Object.prototype.hasOwnProperty.call(d,k)) continue;
+    var v = d[k], t = typeof v;
+    if(v === null || v === undefined) out.push(k+": —");
+    else if(t === "string" || t === "number" || t === "boolean") out.push(k+": "+v);
+    else if(v.length !== undefined) out.push(k+": массив · "+v.length+" элем.");
+    else{
+      var n = 0; for(var kk in v){ n++; }
+      out.push(k+": объект · "+n+" полей");
+    }
+  }
+  return out;
+}
+
+/* ---------- журнал ---------- */
+var TAGS = {action:"ДЕЙСТВИЕ", ok:"ОК", warn:"ВНИМАНИЕ", error:"ОШИБКА", info:"ИНФО"};
 function log(level, msg){
-  var d = new Date();
-  var ts = ("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)+":"+("0"+d.getSeconds()).slice(-2);
-  logArr.unshift({ts:ts, level:level, msg:msg});
-  if(logArr.length>200) logArr.length=200;
+  S.logs.unshift({ts:new Date(), level:level, msg:msg});
+  if(S.logs.length > 220) S.logs.length = 220;
   renderLog();
 }
 function renderLog(){
-  var TAGS={action:"ДЕЙСТВИЕ",ok:"ОК",warn:"ВНИМАНИЕ",error:"ОШИБКА",info:"ИНФО"};
-  var h="";
-  for(var i=0;i<logArr.length;i++){
-    var e=logArr[i];
-    h+='<div class="lrow"><span class="ts">'+e.ts+'</span><span class="tag '+e.level+'">'+TAGS[e.level]+'</span><span class="msg">'+e.msg+'</span></div>';
+  var list = $("logList"), i, e;
+  list.innerHTML = "";
+  var shown = 0;
+  for(i=0;i<S.logs.length;i++){
+    e = S.logs[i];
+    if(S.logFilter !== "all" && e.level !== S.logFilter) continue;
+    var row = document.createElement("div");
+    row.className = "lrow";
+    var ts = document.createElement("span"); ts.className="ts"; ts.innerText = fmtClock(e.ts);
+    var tag = document.createElement("span"); tag.className="tag "+e.level; tag.innerText = TAGS[e.level];
+    var m = document.createElement("span"); m.className="msg"; m.innerText = e.msg; m.title = e.msg;
+    row.appendChild(ts); row.appendChild(tag); row.appendChild(m);
+    list.appendChild(row);
+    shown++;
+    if(shown >= 120) break;
   }
-  document.getElementById("logList").innerHTML=h;
-  document.getElementById("logCount").innerHTML=logArr.length;
+  if(shown === 0){
+    list.innerHTML = '<div style="padding:36px 20px;text-align:center;font:500 11px Consolas,monospace;color:#6490b8">по выбранному фильтру записей нет</div>';
+  }
 }
-function clearLog(){ logArr=[]; log("info","Журнал очищен оператором"); }
+function buildFilters(){
+  var defs = [["all","Все"],["action","Действия"],["ok","ОК"],["warn","Внимание"],["error","Ошибки"]];
+  var box = $("logFilters");
+  for(var i=0;i<defs.length;i++){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "fbtn" + (defs[i][0]===S.logFilter?" on":"");
+    b.setAttribute("data-f", defs[i][0]);
+    b.innerText = defs[i][1];
+    box.appendChild(b);
+  }
+  box.onclick = function(ev){
+    var t = (ev||window.event).srcElement || (ev||window.event).target;
+    if(t && t.getAttribute && t.getAttribute("data-f")){
+      S.logFilter = t.getAttribute("data-f");
+      var bs = box.getElementsByTagName("button");
+      for(var j=0;j<bs.length;j++){ bs[j].className = "fbtn" + (bs[j].getAttribute("data-f")===S.logFilter?" on":""); }
+      renderLog();
+    }
+  };
+}
+$("clearLogBtn").onclick = function(){
+  S.logs = []; log("info","Журнал событий очищен оператором");
+};
 
-/* ---- реальные статусы служб через PowerShell ---- */
-function svcNames(){
-  var all = BASE.slice();
-  for(var i=0;i<dynKkt.length;i++) if(all.indexOf(dynKkt[i])<0) all.push(dynKkt[i]);
-  return all;
-}
-function psListCmd(){
-  var names = svcNames().map(function(n){ return "'"+n+"'"; }).join(",");
-  return "powershell -NoProfile -Command \"" +
-    "Get-Service -Name " + names + ",'esm-cm-*' -ErrorAction SilentlyContinue | " +
-    "ForEach-Object { $_.Name + '=' + $_.Status }\"";
-}
-function pollServices(){
-  if(pendingExec){ /* предыдущий опрос ещё идёт */ return; }
-  try{
-    pendingExec = shell.Exec(psListCmd());
-    log("action","Запрос реестра служб: Get-Service ("+(svcNames().length)+"+ имён)…");
-  }catch(e){
-    log("error","Не удалось запустить PowerShell: "+e.message);
-    pendingExec=null;
+/* ---------- службы: построение строк (один раз) ---------- */
+var STATUS_TXT = {
+  Running:{t:"РАБОТАЕТ", cls:"st-ok", led:"ok"},
+  Stopped:{t:"ОСТАНОВЛЕНА", cls:"st-err", led:"err"},
+  StartPending:{t:"ЗАПУСК…", cls:"st-warn", led:"warn"},
+  StopPending:{t:"ОСТАНОВ…", cls:"st-warn", led:"warn"},
+  NotFound:{t:"НЕ УСТАНОВЛЕНА", cls:"st-dim", led:"dim"}
+};
+function ensureRow(def){
+  if(S.svcByName[def.id]) return S.svcByName[def.id];
+  var row = document.createElement("div"); row.className = "svc";
+  var led = document.createElement("span"); led.className = "led dim";
+  var mid = document.createElement("span"); mid.className = "mid";
+  var id = document.createElement("span"); id.className = "id";
+  id.innerText = def.id;
+  if(def.dyn){
+    var b = document.createElement("span"); b.className = "kkt"; b.innerText = "ККТ";
+    id.appendChild(b);
   }
-}
-function drainExec(){
-  if(!pendingExec) return;
-  if(pendingExec.Status===0) return; /* ещё работает */
-  var out="";
-  try{ out = pendingExec.StdOut.ReadAll(); }catch(e){}
-  pendingExec=null;
-  parseSvc(out);
-}
-function parseSvc(out){
-  var seen={};
-  var lines=out.split(/\r?\n/);
-  var newKkt=[];
-  for(var i=0;i<lines.length;i++){
-    var ln=lines[i]; var eq=ln.indexOf("=");
-    if(eq<0) continue;
-    var name=ln.substr(0,eq).replace(/^\s+|\s+$/g,"");
-    var st=ln.substr(eq+1).replace(/^\s+|\s+$/g,"");
-    if(!name) continue;
-    seen[name]=st;
-    if(name.indexOf("esm-cm-")===0 && newKkt.indexOf(name)<0) newKkt.push(name);
+  var desc = document.createElement("div"); desc.className = "desc"; desc.innerText = def.desc;
+  mid.appendChild(id); mid.appendChild(desc);
+  var st = document.createElement("span"); st.className = "st st-dim"; st.innerText = "…";
+  var acts = document.createElement("span"); acts.className = "acts";
+  var btns = {};
+  var defs = [["stop","■","Остановить: "+def.id],["start","▶","Запустить: "+def.id],["restart","⟳","Перезапустить: "+def.id]];
+  for(var i=0;i<defs.length;i++){
+    var bt = document.createElement("button");
+    bt.type = "button";
+    bt.className = "mini" + (defs[i][0]==="stop"?" stop":"");
+    bt.title = defs[i][2];
+    bt.setAttribute("data-act", defs[i][0]);
+    bt.setAttribute("data-svc", def.id);
+    bt.innerHTML = defs[i][1];
+    acts.appendChild(bt);
+    btns[defs[i][0]] = bt;
   }
-  if(newKkt.length){
-    for(var k=0;k<newKkt.length;k++){
-      if(dynKkt.indexOf(newKkt[k])<0){
-        dynKkt.push(newKkt[k]);
-        log("ok","Автопоиск: обнаружена служба ККТ "+newKkt[k]);
-      }
+  row.appendChild(led); row.appendChild(acts); row.appendChild(st); row.appendChild(mid);
+  var idx = S.services.length;
+  $(idx % 2 === 0 ? "svcColL" : "svcColR").appendChild(row);
+  var rec = {id:def.id, desc:def.desc, dyn:!!def.dyn, status:null, el:{row:row, led:led, st:st, btns:btns}};
+  S.services.push(rec);
+  S.svcByName[def.id] = rec;
+  return rec;
+}
+function updateRow(rec, status){
+  if(rec.status === status) return;
+  rec.status = status;
+  var m = STATUS_TXT[status] || {t:String(status), cls:"st-warn", led:"warn"};
+  rec.el.st.innerText = m.t;
+  rec.el.st.className = "st " + m.cls;
+  rec.el.led.className = "led " + m.led;
+  var dead = (status === "NotFound");
+  for(var k in rec.el.btns){
+    if(Object.prototype.hasOwnProperty.call(rec.el.btns,k)){
+      rec.el.btns[k].disabled = dead;
     }
   }
-  var run=0,stop=0;
-  for(var n in seen){
-    services[n]={id:n, desc:descOf(n), status:seen[n]};
-    if(seen[n]==="Running") run++; else stop++;
-  }
-  log("info","Реестр прочитан: "+run+" работает, "+stop+" в другом состоянии, всего "+(function(){var c=0;for(var x in seen)c++;return c;})()+" найдено");
-  renderServices();
-  renderVerdict();
 }
-function descOf(id){
-  if(id.indexOf("esm-cm-")===0) return "Контроллер ККТ · сер. "+id.replace("esm-cm-","");
-  var map={"regime":"Служба фискального режима","yenisei":"Транспорт обмена с ОФД","atol-service-agent":"Агент сервисов АТОЛ","atol-service-agent-gui":"GUI-оболочка агента","atol-service-agent-updater":"Канал обновлений агента","atol-grpc-service":"gRPC-шлюз АТОЛ","epc-bridge":"Мост электронных чеков","esm-lm-controller":"Контроллер локального модуля","esm-orchestrator":"Оркестратор ESM","uem-agent":"Агент UEM","uem-updater":"Канал обновлений UEM"};
-  return map[id]||"Служба стека";
+function buildBaseRows(){
+  for(var i=0;i<BASE_SERVICES.length;i++){ ensureRow(BASE_SERVICES[i]); }
 }
+$("svcCols").onclick = function(ev){
+  var t = (ev||window.event).srcElement || (ev||window.event).target;
+  while(t && t !== this && !(t.getAttribute && t.getAttribute("data-act"))){ t = t.parentNode; }
+  if(!t || t === this || !t.getAttribute) return;
+  var act = t.getAttribute("data-act");
+  var name = t.getAttribute("data-svc");
+  if(act && name) svcAction(name, act);
+};
 
-function renderServices(){
-  var ids=svcNames();
-  var h="", run=0, total=0;
-  for(var i=0;i<ids.length;i++){
-    var id=ids[i];
-    var s=services[id];
-    var st = s? s.status : "Не найдена";
-    var isKkt = id.indexOf("esm-cm-")===0;
-    var ledCls = st==="Running"?"ok":(st==="Не найдена"?"dim":"warn");
-    var col = st==="Running"?"var(--ok)":(st==="Не найдена"?"var(--ink-500)":"var(--warn)");
-    if(st==="Running") run++;
-    total++;
-    h+='<div class="svc"><span class="led '+ledCls+'" style="margin:0"></span>'
-      +'<div class="mid"><div class="id">'+id+(isKkt?'<span class="kkt">ККТ</span>':'')+'</div><div class="desc">'+descOf(id)+'</div></div>'
-      +'<span class="st" style="color:'+col+'">'+st+'</span>'
-      +'<span class="abtns">'
-      +'<button class="abtn stop" title="Stop-Service '+id+'" onclick="stopSvc(\''+id+'\')" '+(st==="Не найдена"?"disabled":"")+'>&#9632;</button>'
-      +'<button class="abtn" title="Restart-Service '+id+'" onclick="restartSvc(\''+id+'\')" '+(st==="Не найдена"?"disabled":"")+'>&#8635;</button>'
-      +'</span></div>';
-  }
-  document.getElementById("svcGrid").innerHTML=h;
-  document.getElementById("svcCount").innerHTML=run+"/"+total+" работает";
-}
-
-function runPs(cmd, what){
-  try{
-    shell.Run("powershell -NoProfile -Command \""+cmd+"\"", 0, false);
-    log("action",what+" — команда отправлена в PowerShell");
-    setTimeout(pollServices, 1500);
-  }catch(e){
-    log("error","Ошибка выполнения "+what+": "+e.message);
-    errCount++;
-  }
-}
-function stopSvc(id){ runPs("Stop-Service -Name '"+id+"' -Force -ErrorAction SilentlyContinue","Остановка "+id); }
-function restartSvc(id){ runPs("Restart-Service -Name '"+id+"' -Force -ErrorAction SilentlyContinue","Рестарт "+id); }
-function restartAll(){
-  var ids=svcNames();
-  var cmd=ids.map(function(n){return "Restart-Service -Name '"+n+"' -Force -ErrorAction SilentlyContinue";}).join("; ");
-  log("warn","Массовый рестарт всего стека ("+ids.length+" служб)…");
-  runPs(cmd,"Рестарт всех служб");
-}
-
-/* ---- реальные запросы к ЛМ (WinHTTP, без CORS) ---- */
-function lmRequest(method, path, body, cb){
-  reqCount++;
-  var t0=new Date().getTime();
-  try{
-    var x=new ActiveXObject("WinHttp.WinHttpRequest.5.1");
-    x.setTimeouts(2000,2000,4000,6000);
-    x.open(method, LM+path+(path.indexOf("?")<0?"?":"&")+"_="+t0, true);
-    x.setRequestHeader("Authorization", AUTH);
-    if(body!==undefined) x.setRequestHeader("Content-Type","application/json");
-    x.onreadystatechange=function(){
-      if(x.readyState===4){
-        var ms=new Date().getTime()-t0;
-        var data=null;
-        try{ data=eval("("+x.responseText+")"); }catch(e){ data=null; }
-        cb(x.status, data, x.responseText, ms);
-      }
-    };
-    x.send(body!==undefined?body:"");
-  }catch(e){
-    errCount++;
-    cb(0, null, "", new Date().getTime()-t0, e.message);
-  }
-}
-
-function pollLM(){
-  lmRequest("GET","/api/v2/status",undefined,function(status,data,raw,ms,err){
-    polls++;
-    if(status===0){
-      apiState="unreachable";
-      log("error","ЛМ не отвечает: "+(err||"порт 5995 недоступен"));
-    }else{
-      lastPing=ms;
-      if(data && data.version!==undefined) lmVersion=String(data.version);
-      if(data && data.inn!==undefined) lmInn=String(data.inn);
-      var st = data && data.status? String(data.status) : ("HTTP "+status);
-      apiState = st==="ready"?"ready":(st==="not_configured"?"not_configured":"other");
-      if(apiState==="ready") log("ok","ЛМ: ready · версия "+(lmVersion||"н/д")+(lmInn?" · ИНН "+lmInn:""));
-      else if(apiState==="not_configured") log("warn","ЛМ: not_configured — отправьте токен");
-      else log("info","ЛМ вернул статус «"+st+"»");
-      renderApi(st);
-    }
-    renderApiStatus();
-    renderVerdict();
-  });
-}
-
-function renderApi(st){
-  document.getElementById("lmVersion").innerHTML=lmVersion||"—";
-  document.getElementById("lmInn").innerHTML=lmInn||"—";
-  document.getElementById("lmState").innerHTML=st||"—";
-  document.getElementById("lmPing").innerHTML=lastPing!==null?lastPing:"—";
-  document.getElementById("lmPolls").innerHTML=polls;
-}
-function renderApiStatus(){
-  var el=document.getElementById("apiStatus"), led=document.getElementById("apiLed"), chip=document.getElementById("apiChip");
-  if(apiState==="ready"){ el.innerHTML="ЛМ: Готов к работе (ready)"; el.style.color="var(--ok)"; led.className="led ok"; chip.innerHTML="ЛМ "+(lmVersion||"ready"); }
-  else if(apiState==="not_configured"){ el.innerHTML="ЛМ: Не настроен — отправьте токен"; el.style.color="var(--warn)"; led.className="led warn"; chip.innerHTML="ЛМ: не настроен"; }
-  else if(apiState==="unreachable"){ el.innerHTML="ЛМ: Недоступен (порт 5995)"; el.style.color="var(--err)"; led.className="led err"; chip.innerHTML="ЛМ: нет связи"; }
-  else { el.innerHTML="ЛМ: опрос…"; el.style.color="var(--brand-400)"; led.className="led info"; chip.innerHTML="ЛМ: опрос…"; }
-}
-
-/* ---- инициализация токеном: реальный POST + опрос загрузки ---- */
-function doInit(){
-  if(initRunning) return;
-  var tok=document.getElementById("tokInput").value.replace(/^\s+|\s+$/g,"");
-  if(tok.length<24){ showInit("error","Токен слишком короткий — минимум 24 символа",[]); log("error","Инициализация отклонена: токен слишком короткий"); return; }
-  initRunning=true;
-  document.getElementById("initBtn").disabled=true;
-  log("action","POST "+LM+"/api/v2/init — отправка токена в ЛМ…");
-  showInit("sending","Отправка токена → POST /api/v2/init",[]);
-  lmRequest("POST","/api/v2/init",{token:tok},function(status,data,raw,ms,err){
-    if(status===0){
-      initRunning=false; document.getElementById("initBtn").disabled=false;
-      showInit("error","ЛМ не принял запрос: модуль не запущен или не отвечает",[]);
-      log("error","Инициализация: ЛМ не отвечает ("+(err||"нет связи")+")");
-      return;
-    }
-    if(status>=200 && status<300){
-      log("ok","ЛМ принял токен (HTTP "+status+"). Опрос загрузки данных…");
-      watchLoading(0);
-    }else{
-      initRunning=false; document.getElementById("initBtn").disabled=false;
-      showInit("error","ЛМ отклонил инициализацию: HTTP "+status,[]);
-      log("error","Инициализация отклонена ЛМ: HTTP "+status);
-    }
-  });
-}
-function watchLoading(n){
-  lmRequest("GET","/api/v2/status",undefined,function(status,data,raw,ms){
-    var fields=[];
-    if(data){ for(var k in data){ var v=data[k]; fields.push({k:k, v:(typeof v==="object"?"объект/массив":String(v))}); } }
-    var st = data && data.status? String(data.status):("HTTP "+status);
-    if(st==="ready"){
-      initRunning=false; document.getElementById("initBtn").disabled=false;
-      log("ok","Инициализация прошла успешно: статус ready, данные загружены ("+fields.length+" полей в ответе)");
-      showInit("done","Инициализация прошла успешно — данные загружены",fields);
-      pollLM();
-      return;
-    }
-    showInit("loading","Загрузка данных из ЛМ… статус: "+st+" · опрос #"+(n+1),fields);
-    if(n>120){ /* ~180 c */
-      initRunning=false; document.getElementById("initBtn").disabled=false;
-      showInit("error","Таймаут 180 с — ЛМ не перешёл в ready",fields);
-      log("error","Инициализация: таймаут, ЛМ не в статусе ready");
-      return;
-    }
-    setTimeout(function(){ watchLoading(n+1); },1500);
-  });
-}
-function showInit(phase,title,fields){
-  var box=document.getElementById("initBox");
-  box.style.display="block";
-  var color = phase==="done"?"var(--ok)":(phase==="error"?"var(--err)":"var(--chz-300)");
-  var h='<div class="big" style="color:'+color+'">'+title+'</div>';
-  if(phase==="done"){
-    h+='<div style="margin-top:6px;color:var(--ink-300)">Данных в базе ЛМ: <b style="color:var(--chz-300)">'+fields.length+' показателей</b></div>';
-  }
-  if(fields.length){
-    h+='<div style="margin-top:8px;max-height:150px;overflow-y:auto">';
-    for(var i=0;i<fields.length;i++){
-      h+='<div class="kv"><span class="k">'+fields[i].k+'</span><span class="v">'+fields[i].v+'</span></div>';
-    }
-    h+='</div>';
-  }
-  if(phase==="done"||phase==="error"){
-    h+='<div style="margin-top:10px"><button class="btn" onclick="hideInit()">скрыть отчёт</button></div>';
-  }
-  box.innerHTML=h;
-}
-function hideInit(){ document.getElementById("initBox").style.display="none"; }
-
-/* ---- вердикт ---- */
-function renderVerdict(){
-  var lbl=document.getElementById("verdictLabel"), det=document.getElementById("verdictDetail"),
-      led=document.getElementById("verdictLed"), bar=document.getElementById("verdictBar");
-  var run=0,tot=0; for(var k in services){ tot++; if(services[k].status==="Running") run++; }
-  if(apiState==="unreachable"){
-    lbl.innerHTML="НЕТ СВЯЗИ С ЛМ"; lbl.style.color="var(--err)"; led.className="led err"; bar.style.background="var(--err)";
-    det.innerHTML="Порт 5995 не отвечает. Проверьте, запущен ли локальный модуль. Службы: "+run+"/"+tot+" работает.";
-  }else if(apiState==="not_configured"){
-    lbl.innerHTML="НЕ НАСТРОЕН"; lbl.style.color="var(--warn)"; led.className="led warn"; bar.style.background="var(--warn)";
-    det.innerHTML="ЛМ на связи, но не инициализирован — отправьте токен. Службы: "+run+"/"+tot+" работает.";
-  }else if(apiState==="ready"){
-    lbl.innerHTML="ШТАТНЫЙ РЕЖИМ"; lbl.style.color="var(--ok)"; led.className="led ok"; bar.style.background="var(--ok)";
-    det.innerHTML="ЛМ готов · версия "+(lmVersion||"н/д")+(lmInn?" · ИНН "+lmInn:"")+". Службы: "+run+"/"+tot+" работает.";
+/* ---------- реальные действия со службами ---------- */
+var PS_QUOTE = "'";
+function svcAction(name, act){
+  var label = act==="stop"?"Остановка":act==="start"?"Запуск":"Перезапуск";
+  var cmd;
+  if(act==="stop"){ cmd = "Stop-Service -Name "+PS_QUOTE+name+PS_QUOTE+" -Force -ErrorAction SilentlyContinue"; }
+  else if(act==="start"){ cmd = "Start-Service -Name "+PS_QUOTE+name+PS_QUOTE+" -ErrorAction SilentlyContinue"; }
+  else{ cmd = "Restart-Service -Name "+PS_QUOTE+name+PS_QUOTE+" -Force -ErrorAction SilentlyContinue"; }
+  log("action", label+" «"+name+"»…");
+  if(act !== "stop") S.totals.restarts++;
+  var r = ps(cmd + "; Get-Service -Name "+PS_QUOTE+name+PS_QUOTE+" -ErrorAction SilentlyContinue | ForEach-Object { $_.Status }");
+  if(!r.ok){
+    log("error", "PowerShell недоступен: "+r.err+" — запустите монитор от имени администратора");
   }else{
-    lbl.innerHTML="ОПРОС СИСТЕМЫ"; lbl.style.color="var(--brand-400)"; led.className="led info"; bar.style.background="var(--brand-400)";
-    det.innerHTML="Читаем реальные статусы служб и состояние ЛМ…";
+    var lines = r.out.split(/\r?\n/), res = "";
+    for(var i=lines.length-1;i>=0;i--){ if(trim(lines[i])){ res = trim(lines[i]); break; } }
+    if(res === "Running") log("ok", "«"+name+"»: статус Running");
+    else if(res === "Stopped") log("warn", "«"+name+"»: статус Stopped");
+    else if(res === "") log("warn", "«"+name+"»: служба не найдена в системе");
+    else log("info", "«"+name+"»: статус "+res);
+    if(r.err && trim(r.err)) log("warn", "PowerShell: "+trim(r.err).split(/\r?\n/)[0]);
   }
+  refreshOps();
+  pollServices(true);
+}
+$("restartAllBtn").onclick = function(){
+  var names = [];
+  for(var i=0;i<S.services.length;i++){
+    if(S.services[i].status !== "NotFound") names.push(S.services[i].id);
+  }
+  if(!names.length){ log("warn","Нет установленных служб для перезапуска"); return; }
+  log("action","Массовый перезапуск: "+names.length+" служб в очереди");
+  var i2 = 0;
+  function next(){
+    if(i2 >= names.length){ log("ok","Массовый перезапуск завершён"); return; }
+    var n = names[i2++];
+    svcAction(n, "restart");
+    window.setTimeout(next, 300);
+  }
+  next();
+};
+
+/* ---------- опрос служб (Get-Service, реальные статусы) ---------- */
+function currentNames(){
+  var names = [];
+  for(var i=0;i<BASE_SERVICES.length;i++){ names.push(PS_QUOTE+BASE_SERVICES[i].id+PS_QUOTE); }
+  if(S.kktSerial){ names.push(PS_QUOTE+"esm-cm-"+S.kktSerial+PS_QUOTE); }
+  return names.join(",");
+}
+function pollServices(silent){
+  var cmd = "Get-Service -Name "+currentNames()+" -ErrorAction SilentlyContinue | ForEach-Object { $_.Name + '|' + $_.Status }; "
+          + "Get-Service -Name 'esm-cm*' -ErrorAction SilentlyContinue | ForEach-Object { $_.Name + '|' + $_.Status }";
+  var r = ps(cmd);
+  var map = {};
+  if(r.ok){
+    var lines = r.out.split(/\r?\n/);
+    for(var i=0;i<lines.length;i++){
+      var p = lines[i].split("|");
+      if(p.length === 2 && trim(p[0])){ map[trim(p[0])] = trim(p[1]); }
+    }
+  }else if(!silent){
+    log("error","Get-Service не выполнен: "+r.err);
+  }
+  /* автообнаружение esm-cm-* (как в обработке) */
+  for(var nm in map){
+    if(Object.prototype.hasOwnProperty.call(map,nm) && nm.indexOf("esm-cm-") === 0 && !S.svcByName[nm]){
+      var ser = nm.substring(7);
+      ensureRow({id:nm, desc:"Контроллер ККТ · сер. "+ser, dyn:true});
+      log("info","Автопоиск: обнаружена служба ККТ "+nm);
+    }
+  }
+  var stoppedNow = [];
+  for(var j=0;j<S.services.length;j++){
+    var rec = S.services[j];
+    var st = map[rec.id] || "NotFound";
+    if(st === "Stopped") stoppedNow.push(rec);
+    updateRow(rec, st);
+  }
+  /* счётчики в шапке */
+  var run = 0, stop = 0, nf = 0;
+  for(var k=0;k<S.services.length;k++){
+    if(S.services[k].status === "Running") run++;
+    else if(S.services[k].status === "Stopped") stop++;
+    else if(S.services[k].status === "NotFound") nf++;
+  }
+  $("svcChip").innerText = run+"/"+S.services.length+" служб";
+  $("chipSvcs").innerText = run+"/"+S.services.length;
+  $("svcFoot").innerText = "Get-Service → "+S.services.length+" записей · "+run+" работает, "+stop+" остановлено, "+nf+" не установлено · "+(r.ok?r.ms+" мс":"ошибка");
+
+  /* авто-восстановление: реальный Start-Service, как в обработке */
+  if(S.autoHeal){
+    for(var m2=0;m2<stoppedNow.length;m2++){
+      var rec2 = stoppedNow[m2];
+      if(rec2.status === "Stopped"){
+        S.totals.autoStarts++;
+        log("warn","Авто-восстановление: запуск «"+rec2.id+"» (Start-Service)");
+        ps("Start-Service -Name "+PS_QUOTE+rec2.id+PS_QUOTE+" -ErrorAction SilentlyContinue");
+        updateRow(rec2, "StartPending");
+      }
+    }
+  }
+  S.lastPoll = new Date().getTime();
+  refreshOps();
+  refreshVerdict();
 }
 
-/* ---- часы ---- */
-setInterval(function(){
-  var d=new Date();
-  document.getElementById("clock").innerHTML=("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)+":"+("0"+d.getSeconds()).slice(-2);
-  drainExec();
-},1000);
+/* ---------- опрос API ЛМ (реальный HTTP) ---------- */
+function pollApi(silent){
+  var r = http("GET", "/api/v2/status");
+  S.totals.polls++;
+  if(r.status > 0){
+    var d = parseJson(r.text);
+    var st = (d && d.status) ? String(d.status) : "HTTP "+r.status;
+    var prev = S.api;
+    S.api = (st === "ready") ? "ready" : (st === "not_configured") ? "not_configured" : "other";
+    S.apiMs = r.ms;
+    S.apiHttpStatus = r.status;
+    if(d){
+      if(d.version !== undefined && d.version !== null) S.apiVersion = String(d.version);
+      if(d.inn !== undefined && d.inn !== null) S.apiInn = String(d.inn);
+    }
+    if(prev !== S.api || prev === "unreachable" || prev === "boot"){
+      if(S.api === "ready") log("ok","ЛМ: статус ready · версия "+(S.apiVersion||"н/д")+(S.apiInn?" · ИНН "+S.apiInn:""));
+      else if(S.api === "not_configured") log("warn","ЛМ: статус not_configured — модуль не инициализирован токеном");
+      else log("info","ЛМ: статус «"+st+"» (HTTP "+r.status+", "+r.ms+" мс)");
+    }
+    renderApi(st);
+  }else{
+    if(S.api !== "unreachable"){ log("error","ЛМ не отвечает (127.0.0.1:5995): "+(r.err||"нет связи")+" — проверьте, что локальный модуль запущен"); }
+    else if(S.totals.polls % 5 === 0){ log("warn","ЛМ по-прежнему недоступен: "+(r.err||"нет связи")); }
+    S.api = "unreachable"; S.apiMs = null;
+    renderApi(null);
+  }
+  refreshVerdict();
+}
+function renderApi(st){
+  var led = $("apiLed"), txt = $("apiStatusTxt");
+  if(S.api === "ready"){
+    led.className = "led ok"; txt.style.color = "#34d399"; txt.innerText = "ЛМ: Готов к работе";
+  }else if(S.api === "not_configured"){
+    led.className = "led warn"; txt.style.color = "#fbbf24"; txt.innerText = "ЛМ: Не настроен — введите токен";
+  }else if(S.api === "other"){
+    led.className = "led info"; txt.style.color = "#fb923c"; txt.innerText = "ЛМ: статус «"+st+"»";
+  }else{
+    led.className = "led err"; txt.style.color = "#f87171"; txt.innerText = "ЛМ: Недоступен (порт 5995)";
+  }
+  $("apiVersion").innerText = S.apiVersion || "—";
+  $("apiVersion").className = "v" + (S.apiVersion?" acc":"");
+  $("apiInn").innerText = S.apiInn || "—";
+  $("apiModStatus").innerText = st || (S.api==="unreachable" ? "нет связи" : "—");
+  $("apiSerial").innerText = S.kktSerial || "—";
+  $("apiSerial").className = "v" + (S.kktSerial?" acc":"");
+  $("apiMs").innerText = (S.apiMs !== null && S.apiMs !== undefined) ? S.apiMs : "—";
+  $("apiPolls").innerText = String(S.totals.polls);
+  $("chipApi").innerText = S.api === "ready" ? "READY" : S.api === "not_configured" ? "NOT CONFIG" : S.api === "other" ? "HTTP "+S.apiHttpStatus : "OFFLINE";
+  $("chipPing").innerText = (S.apiMs !== null && S.apiMs !== undefined) ? S.apiMs+" мс" : "—";
+  $("chipPolls").innerText = "#"+S.totals.polls;
+  $("apiChip").innerText = "ЛМ " + (S.apiVersion || (S.api==="unreachable" ? "нет связи" : "…"));
+}
 
-/* ---- старт ---- */
-log("info","Монитор запущен. Режим реальных запросов: демо-данные отключены");
-log("action","Первичный опрос реестра служб Windows (Get-Service)…");
-pollServices();
-pollLM();
-setInterval(function(){ pollServices(); pollLM(); }, INTERVAL);
+/* ---------- сводный вердикт ---------- */
+function refreshVerdict(){
+  var label, tone, detail;
+  if(S.api === "unreachable"){
+    label = "НЕТ СВЯЗИ С ЛМ"; tone = "err";
+    detail = "Порт 5995 не отвечает — локальный модуль не запущен либо занят. Службы читаются напрямую из SCM.";
+  }else if(S.api === "ready"){
+    label = "ШТАТНЫЙ РЕЖИМ"; tone = "ok";
+    detail = "ЛМ готов к работе · версия "+(S.apiVersion||"н/д")+(S.apiInn?" · ИНН "+S.apiInn:"");
+  }else if(S.api === "not_configured"){
+    label = "НЕ НАСТРОЕН"; tone = "warn";
+    detail = "ЛМ на связи, но не инициализирован — отправьте токен в панели API";
+  }else if(S.api === "boot"){
+    label = "ОПРОС СИСТЕМЫ"; tone = "info"; detail = "установление связи с локальным модулем…";
+  }else{
+    label = "СТАТУС ЛМ"; tone = "info"; detail = "Модуль вернул нестандартный статус — см. панель API";
+  }
+  var bad = 0;
+  for(var i=0;i<S.services.length;i++){ if(S.services[i].status === "Stopped") bad++; }
+  if(bad && S.api !== "unreachable"){
+    label = "ДЕГРАДАЦИЯ"; tone = "warn";
+    detail = "Остановлено служб: "+bad+" — включено авто-восстановление или нажмите ⟳";
+  }
+  var colors = {ok:"#34d399", warn:"#fbbf24", err:"#f87171", info:"#fb923c"};
+  $("verdictLabel").innerText = label;
+  $("verdictLabel").style.color = colors[tone];
+  $("verdictDetail").innerText = detail;
+  $("verdictTop").style.background = colors[tone];
+  $("verdictLed").className = "led " + (tone==="info"?"info":tone);
+}
+
+/* ---------- инициализация токеном (реальный POST + прогресс) ---------- */
+$("initBtn").onclick = function(){
+  if(S.init.busy) return;
+  var tok = trim($("tokInput").value);
+  var stEl = $("initStatus"), fl = $("initFields"), ok = $("initOk");
+  if(tok.length < 24){
+    stEl.style.color = "#f87171";
+    stEl.innerText = "Токен слишком короткий — минимум 24 символа";
+    return;
+  }
+  S.init.busy = true;
+  $("initBtn").disabled = true;
+  ok.style.display = "none";
+  fl.style.display = "block"; fl.innerText = "";
+  stEl.style.color = "#fb923c";
+  stEl.innerText = "Отправка токена: POST /api/v2/init…";
+  log("action","POST "+LM_URL+"/api/v2/init — передача токена в локальный модуль…");
+
+  var safe = tok.replace(/\\/g,"\\\\").replace(/"/g,'\\"');
+  var r = http("POST", "/api/v2/init", '{"token":"'+safe+'"}');
+  if(r.status === 0){
+    stEl.style.color = "#f87171";
+    stEl.innerText = "ЛМ не ответил: "+(r.err||"нет связи")+". Убедитесь, что локальный модуль запущен.";
+    log("error","Инициализация не выполнена: ЛМ не ответил ("+(r.err||"нет связи")+")");
+    S.init.busy = false; $("initBtn").disabled = false;
+    return;
+  }
+  if(r.status >= 400){
+    stEl.style.color = "#f87171";
+    stEl.innerText = "ЛМ отклонил токен: HTTP "+r.status+(r.text?" · "+r.text.substring(0,140):"");
+    log("error","Инициализация отклонена модулем: HTTP "+r.status);
+    S.init.busy = false; $("initBtn").disabled = false;
+    return;
+  }
+  stEl.style.color = "#8ef0e2";
+  stEl.innerText = "ЛМ принял токен (HTTP "+r.status+"). Идёт загрузка данных…";
+  log("ok","ЛМ принял запрос инициализации (HTTP "+r.status+"). Опрос загрузки данных…");
+  S.init.polls = 0;
+  if(S.init.timer) window.clearInterval(S.init.timer);
+  S.init.timer = window.setInterval(initTick, 1500);
+};
+function initTick(){
+  S.init.polls++;
+  var r = http("GET", "/api/v2/status");
+  if(r.status > 0){
+    var d = parseJson(r.text);
+    var st = (d && d.status) ? String(d.status) : "HTTP "+r.status;
+    var fields = flatFields(d);
+    $("initStatus").innerText = "Загрузка данных: статус ЛМ «"+st+"» · опрос #"+S.init.polls+" · полей в ответе: "+fields.length;
+    $("initFields").innerText = fields.join("\n") || "(ответ без полей)";
+    if(d && d.version !== undefined) { S.apiVersion = String(d.version); }
+    if(st === "ready"){
+      window.clearInterval(S.init.timer); S.init.timer = null;
+      finishInit(d);
+      return;
+    }
+  }else{
+    $("initStatus").innerText = "Опрос #"+S.init.polls+": ЛМ временно не отвечает, повтор…";
+  }
+  if(S.init.polls >= 120){
+    window.clearInterval(S.init.timer); S.init.timer = null;
+    $("initStatus").style.color = "#f87171";
+    $("initStatus").innerText = "Таймаут 3 мин — ЛМ не перешёл в статус ready. Проверьте журнал модуля.";
+    log("error","Инициализация не завершена: таймаут ожидания статуса ready");
+    S.init.busy = false; $("initBtn").disabled = false;
+  }
+}
+function finishInit(statusData){
+  /* дотягиваем реальные данные о наполнении базы */
+  var lines = flatFields(statusData);
+  var probes = ["/api/v2/sync/state","/api/v2/stats","/api/v2/db/info","/api/v2/info"];
+  for(var i=0;i<probes.length;i++){
+    var r = http("GET", probes[i]);
+    if(r.status > 0 && r.status < 400){
+      var d = parseJson(r.text);
+      if(d){
+        var f = flatFields(d);
+        for(var j=0;j<f.length;j++){ lines.push(probes[i]+" → "+f[j]); }
+      }
+    }
+  }
+  $("initStatus").style.color = "#34d399";
+  $("initStatus").innerText = "Инициализация прошла успешно · данных в базе: "+lines.length+" показателей";
+  $("initOk").style.display = "block";
+  $("initOkT").innerText = "✓ Инициализация прошла успешно · данных в базе: "+lines.length+" показателей";
+  $("initOkD").innerText = lines.join("\n") || "(детали не возвращены)";
+  log("ok","Инициализация ЛМ завершена успешно: статус ready, загружено показателей: "+lines.length);
+  S.api = "ready";
+  S.init.busy = false;
+  $("initBtn").disabled = false;
+  pollApi(true);
+}
+$("initResetBtn").onclick = function(){
+  if(S.init.timer){ window.clearInterval(S.init.timer); S.init.timer = null; }
+  S.init.busy = false;
+  $("initBtn").disabled = false;
+  $("tokInput").value = "";
+  $("initStatus").innerText = "";
+  $("initFields").style.display = "none";
+  $("initFields").innerText = "";
+  $("initOk").style.display = "none";
+  log("info","Форма инициализации сброшена");
+};
+
+/* ---------- серийный номер ККТ ---------- */
+function applySerial(){
+  var v = trim($("kktInput").value).toUpperCase();
+  if(v && !/^[0-9A-Z\-]{6,20}$/.test(v)){
+    $("kktHint").style.color = "#f87171";
+    $("kktHint").innerText = "Серийный №: 6–20 символов — цифры и латинские буквы";
+    return;
+  }
+  S.kktSerial = v || null;
+  try{ localStorage.setItem("kkt34mon.serial", v); }catch(e){}
+  if(v){
+    ensureRow({id:"esm-cm-"+v, desc:"Контроллер ККТ · сер. "+v, dyn:true});
+    $("kktBadge").className = "badge on";
+    $("kktBadge").innerText = "esm-cm-"+v;
+    $("kktHint").style.color = "#86efac";
+    $("kktHint").innerText = "Служба esm-cm-"+v+" добавлена в реальный опрос (Get-Service)";
+    log("ok","Серийный № ККТ принят: отслеживается служба esm-cm-"+v);
+  }else{
+    $("kktBadge").className = "badge";
+    $("kktBadge").innerText = "не привязана";
+    $("kktHint").style.color = "#6490b8";
+    $("kktHint").innerText = "Введите серийный № — монитор добавит службу esm-cm-<номер> в реальный опрос";
+    log("info","Серийный № ККТ сброшен");
+  }
+  pollServices(true);
+  renderApi(null);
+}
+$("kktApplyBtn").onclick = applySerial;
+$("kktInput").onkeydown = function(ev){
+  var e = ev || window.event;
+  if(e.keyCode === 13) applySerial();
+};
+$("kktInput").onfocus = function(){
+  if($("kktHint").innerText.indexOf("Серийный №: 6") === 0){
+    $("kktHint").style.color = "#6490b8";
+    $("kktHint").innerText = "Введите серийный № — монитор добавит службу esm-cm-<номер> в реальный опрос";
+  }
+};
+
+/* ---------- параметры ---------- */
+function refreshOps(){
+  $("stUp").innerText = fmtUp(new Date().getTime() - S.startTs);
+  $("stRestarts").innerText = String(S.totals.restarts);
+  $("stAuto").innerText = String(S.totals.autoStarts);
+  $("stErr").innerText = String(S.totals.psErrors);
+  $("stErr").style.color = S.totals.psErrors ? "#fca5a5" : "#dfeaf5";
+}
+$("healBtn").onclick = function(){
+  S.autoHeal = !S.autoHeal;
+  $("healSw").className = "sw" + (S.autoHeal?" on":"");
+  $("healStx").innerText = S.autoHeal ? "ВКЛ" : "ВЫКЛ";
+  $("healStx").style.color = S.autoHeal ? "#34d399" : "#6490b8";
+  log("info","Авто-восстановление остановленных служб: "+(S.autoHeal?"ВКЛ":"ВЫКЛ"));
+};
+var ivBtns = document.body.getElementsByTagName("button");
+for(var q=0;q<ivBtns.length;q++){
+  if(ivBtns[q].getAttribute("data-iv")){
+    ivBtns[q].onclick = (function(btn){
+      return function(){
+        S.interval = parseInt(btn.getAttribute("data-iv"),10) * 1000;
+        var all = document.body.getElementsByTagName("button");
+        for(var j=0;j<all.length;j++){
+          if(all[j].getAttribute("data-iv")){
+            all[j].className = "ivbtn" + (all[j]===btn?" on":"");
+          }
+        }
+        log("info","Интервал опроса изменён: "+(S.interval/1000)+" с");
+        schedule();
+      };
+    })(ivBtns[q]);
+  }
+}
+$("pollBtn").onclick = function(){
+  log("action","Опрос системы вручную: Get-Service + GET /api/v2/status");
+  pollServices(true);
+  pollApi(true);
+  schedule();
+};
+
+/* ---------- таймеры ---------- */
+var pollTimer = null;
+function schedule(){
+  if(pollTimer) window.clearTimeout(pollTimer);
+  pollTimer = window.setTimeout(function(){
+    pollServices(true);
+    pollApi(true);
+    schedule();
+  }, S.interval);
+}
+window.setInterval(function(){
+  $("clock").innerText = fmtClock(new Date());
+  refreshOps();
+  if(S.lastPoll){
+    var el = new Date().getTime() - S.lastPoll;
+    var p = Math.min(100, el / S.interval * 100);
+    $("pollFill").style.width = p + "%";
+    var left = Math.max(0, Math.ceil((S.interval - el)/1000));
+    $("pollHint").innerText = "автоопрос через "+left+" с · интервал "+(S.interval/1000)+" с";
+  }
+}, 1000);
+
+/* ---------- старт ---------- */
+$("footL").innerHTML = "© "+(new Date().getFullYear())+" ООО «Правовой Статус» (ККТ34) · <b>kkt34.ru</b> · г. Волгоград · сервисное обслуживание ККТ";
+$("footR").innerText = "Get-Service / Stop-Service / Start-Service · GET "+LM_URL+"/api/v2/status · POST /api/v2/init";
+buildFilters();
+buildBaseRows();
+try{
+  var savedSerial = localStorage.getItem("kkt34mon.serial");
+  if(savedSerial){ $("kktInput").value = savedSerial; applySerial(); }
+}catch(e2){}
+log("info","Монитор запущен. Режим реальных данных: PowerShell (SCM) + WinHTTP (ЛМ)");
+log("action","Первичный опрос: Get-Service + GET /api/v2/status…");
+pollServices(false);
+pollApi(false);
+schedule();
 </script>
 </body>
 </html>
