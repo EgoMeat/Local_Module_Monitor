@@ -324,6 +324,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M7.8 16.2a6 6 0 0 1 0-8.4M16.2 7.8a6 6 0 0 1 0 8.4"/><path d="M5 19a10 10 0 0 1 0-14M19 5a10 10 0 0 1 0 14"/></svg>
           <span class="ptitle">API Честного ЗНАКа</span>
           <span style="margin-left:auto;border:1px solid var(--ink-700);background:var(--ink-900);padding:4px 8px;font:500 10px var(--font-m);color:var(--ink-300)">localhost:5995</span>
+          <button class="btn" id="liveBtn" style="padding:5px 10px;font-size:10px;border-color:rgba(31,185,168,.5);background:var(--chz-900);color:var(--chz-300)" title="Запросить реальную версию у локального модуля на этом ПК">LIVE-проверка</button>
         </div>
         <div class="apibody" id="apiBody"></div>
       </section>
@@ -400,6 +401,7 @@ var S = {
     {id:"esm-cm-—",desc:"ККТ не привязана — укажите серийный № или выполните опрос",st:"not_found",kkt:true}
   ],
   kktSerial:null, kktScan:"idle", kktDetected:null, kktError:null,
+  live:"idle", liveVersion:null, liveNote:null,
   configured:false, tokenTail:null, api:"probing", ping:[], lastPoll:null,
   interval:4000, autoHeal:true, injectFaults:false,
   logs:[], logSeq:0, filter:"all",
@@ -681,7 +683,9 @@ function renderApi(){
     +'<div class="arow"><span class="l">Токен сессии</span><span class="v">'+(S.tokenTail?"принят ····"+S.tokenTail:"не задан")+'</span></div>'
     +'<div class="arow"><span class="l">Серийный № ККТ</span><span class="v'+(S.kktSerial?" acc":"")+'">'+(S.kktSerial||"не задан")+'</span></div>'
     +'<div class="arow"><span class="l">Опросов выполнено</span><span class="v">'+S.totals.polls+'</span></div>'
+    +(S.live!=="idle"?'<div class="arow"><span class="l">LIVE · реальный ЛМ</span><span class="v'+(S.live==="ok"?" acc":"")+'">'+(S.live==="ok"?S.liveVersion:S.live==="checking"?"опрос…":S.liveNote)+'</span></div>':"")
     +'</div>'
+    +'<div style="margin-top:12px;font:500 9.5px var(--font-m);color:var(--ink-500);line-height:1.5">В демо-режиме версия берётся из симуляции ('+API_VER+'); LIVE-проверка запрашивает реальный модуль на этом ПК (GET /api/v2/status, Basic-авторизация).</div>'
     +'<div style="margin-top:20px"><div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:500 9.5px var(--font-m);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-400)">Отклик API, мс</span><span style="font:700 14px var(--font-m);color:var(--chz-300)">'+(ping!==null?ping:"—")+'</span></div>'
     +'<div class="sparkbox">'+spark()+'</div></div>'
     +'<div style="margin-top:auto">';
@@ -777,6 +781,34 @@ $("#kktApplyBtn").addEventListener("click",function(){
 });
 $("#kktInput").addEventListener("input",function(){ S.kktError=null; renderKkt(); });
 $("#kktInput").addEventListener("keydown",function(e){ if(e.key==="Enter")$("#kktApplyBtn").click(); });
+
+/* ---- LIVE-проверка: реальный запрос к ЛМ на этом ПК ---- */
+$("#liveBtn").addEventListener("click",function(){
+  if(S.live==="checking")return;
+  S.live="checking";
+  var b=$("#liveBtn"); b.disabled=true; b.textContent="Опрос…";
+  log("action","LIVE: запрос к реальному ЛМ → GET http://localhost:5995/api/v2/status…");
+  renderApi();
+  var ctrl=new AbortController();
+  var t=setTimeout(function(){ ctrl.abort(); },4000);
+  fetch("http://localhost:5995/api/v2/status?_="+Date.now(),{headers:{"Authorization":"Basic YWRtaW46YWRtaW4="},signal:ctrl.signal})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      S.live="ok"; S.liveVersion=d&&d.version?String(d.version):"n/a";
+      log("ok","LIVE: реальный модуль ответил — версия "+S.liveVersion+(d&&d.inn?", ИНН "+d.inn:""));
+      toast("ok","Реальный ЛМ ответил: версия "+S.liveVersion);
+    })
+    .catch(function(){
+      S.live="fail"; S.liveNote="таймаут, CORS или модуль не запущен";
+      log("warn","LIVE: реальный ЛМ не ответил ("+S.liveNote+") — остаётся демо-телеметрия");
+      toast("warn","Реальный ЛМ не ответил — показана демо-версия из симуляции");
+    })
+    .finally(function(){
+      clearTimeout(t);
+      b.disabled=false; b.textContent="LIVE-проверка";
+      renderApi();
+    });
+});
 function renderAll(){ renderVerdict(); renderServices(); renderApi(); renderOps(); renderKkt(); }
 
 /* ---- секундомер: часы, аптайм, прогресс опроса ---- */

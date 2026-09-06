@@ -120,12 +120,14 @@ export function ApiPanel({
   initError,
   onInit,
   onReset,
+  onLive,
 }: {
   state: SimState;
   busyInit: boolean;
   initError: string | null;
   onInit: (token: string) => void;
   onReset: () => void;
+  onLive: () => void;
 }) {
   const reachable = state.api === "ready" || state.api === "not_configured";
   const ping = state.ping.length ? state.ping[state.ping.length - 1] : null;
@@ -147,6 +149,19 @@ export function ApiPanel({
         <span className="ml-auto border border-ink-700 bg-ink-900 px-2 py-1 font-mono text-[10px] tracking-wide text-ink-300">
           localhost:5995
         </span>
+        <button
+          onClick={onLive}
+          disabled={state.live === "checking"}
+          className={`flex items-center gap-1.5 border px-2 py-1 font-display text-[9px] font-semibold tracking-[0.12em] uppercase transition-all active:scale-95 ${
+            state.live === "checking"
+              ? "cursor-wait border-warn-500/50 bg-warn-900 text-warn-300"
+              : "border-chz-500/50 bg-chz-900 text-chz-300 hover:border-chz-400 hover:bg-chz-500/20"
+          }`}
+          title="Запросить реальную версию у локального модуля на этом ПК"
+        >
+          <IconRadio width={11} height={11} className={state.live === "checking" ? "animate-led-blink" : ""} />
+          {state.live === "checking" ? "Опрос…" : "LIVE-проверка"}
+        </button>
       </div>
 
       <div className="flex flex-1 flex-col p-5">
@@ -167,7 +182,25 @@ export function ApiPanel({
             accent={state.kktSerial !== null}
           />
           <InfoRow label="Опросов выполнено" value={String(state.totals.polls)} />
+          {state.live !== "idle" && (
+            <InfoRow
+              label="LIVE · реальный ЛМ"
+              value={
+                state.live === "ok"
+                  ? state.liveVersion ?? "n/a"
+                  : state.live === "checking"
+                    ? "опрос…"
+                    : state.liveNote ?? "недоступен"
+              }
+              accent={state.live === "ok"}
+            />
+          )}
         </div>
+
+        <p className="mt-3 font-mono text-[9.5px] leading-relaxed text-ink-500">
+          В демо-режиме версия берётся из симуляции ({state.apiVersion}); LIVE-проверка запрашивает
+          реальный модуль на этом ПК (GET /api/v2/status, Basic-авторизация).
+        </p>
 
         <div className="mt-5">
           <div className="mb-2 flex items-baseline justify-between">
