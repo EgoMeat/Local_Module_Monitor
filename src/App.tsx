@@ -1,20 +1,30 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import { KKT_PORTS, KKT_SERIAL_POOL, makeInitialState, reducer } from "./lib/sim";
+import {
+  LM_BASE,
+  copyText,
+  flattenFields,
+  lmRequest,
+  makeInitialState,
+  psRestartOne,
+  reducer,
+  TARGET_SERVICES,
+} from "./lib/real";
 import { Header, VerdictStrip } from "./components/header";
 import { ServiceBoard } from "./components/services";
 import { ApiPanel, OpsPanel } from "./components/panels";
 import { LogPanel, Toasts, TrayPill, type ToastData } from "./components/log";
 import { ToolPanel } from "./components/download";
 
+const LS_SERIAL = "kkt34mon.web.serial";
+
 export default function App() {
   const [state, dispatch] = useReducer(reducer, undefined, makeInitialState);
   const [now, setNow] = useState(() => Date.now());
   const [uptime, setUptime] = useState(0);
   const [minimized, setMinimized] = useState(false);
-  const [busyInit, setBusyInit] = useState(false);
-  const [initError, setInitError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<ToastData[]>([]);
   const toastSeq = useRef(0);
+  const initTimer = useRef<number | null>(null);
 
   const addToast = useCallback((tone: ToastData["tone"], msg: string) => {
     const id = ++toastSeq.current;
@@ -24,7 +34,7 @@ export default function App() {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  /* секундомер: часы + аптайм */
+  /* часы + аптайм */
   useEffect(() => {
     const t = window.setInterval(() => {
       setNow(Date.now());
@@ -33,122 +43,146 @@ export default function App() {
     return () => window.clearInterval(t);
   }, []);
 
-  /* первичный опрос системы */
-  useEffect(() => {
-    const t = window.setTimeout(() => dispatch({ type: "POLL", now: Date.now() }), 900);
-    return () => window.clearTimeout(t);
+  /* реальный опрос ЛМ */
+  const pollOnce = useCallback(async () => {
+    const r = await lmRequest("GET", "/api/v2/status");
+    if (r.ok || r.httpStatus > 0) {
+      dispatch({
+        type: "API_RESULT",
+        ok: r.ok,
+        httpStatus: r.httpStatus,
+        data: r.data,
+        raw: r.raw,
+        ms: r.ms,
+        now: Date.now(),
+      });
+    } else {
+      dispatch({ type: "API_FAIL", reason: r.reason ?? "нет ответа", now: Date.now() });
+    }
   }, []);
 
-  /* периодический опрос (работает и в трей-режиме) */
   useEffect(() => {
-    const t = window.setInterval(() => dispatch({ type: "POLL", now: Date.now() }), state.pollInterval);
+    pollOnce();
+    const t = window.setInterval(pollOnce, state.interval);
     return () => window.clearInterval(t);
-  }, [state.pollInterval]);
+  }, [pollOnce, state.interval]);
 
-  /* рестарт одной службы: Stop → пауза → Start */
-  const restartOne = useCallback(
-    (id: string, baseDelay = 0) => {
-      window.setTimeout(() => dispatch({ type: "SVC_STOP", id }), baseDelay);
-      window.setTimeout(() => dispatch({ type: "SVC_START", id }), baseDelay + 1100);
-      window.setTimeout(() => {
-        dispatch({ type: "SVC_UP", id });
-        addToast("ok", `Служба «${id}» перезапущена и отвечает`);
-      }, baseDelay + 2400);
-    },
-    [addToast]
-  );
-
-  const restartAll = useCallback(() => {
-    const eligible = state.services.filter(
-      (s) => s.status === "running" || s.status === "stopped"
-    );
-    eligible.forEach((s, i) => restartOne(s.id, i * 170));
-    addToast("info", `Массовый перезапуск: ${eligible.length} служб в очереди`);
-  }, [state.services, restartOne, addToast]);
-
-  /* опрос системы: поиск ККТ, подключённой к ПК */
-  const scanKkt = useCallback(() => {
-    dispatch({ type: "KKT_SCAN_START" });
-    const serial = state.kktSerial ?? KKT_SERIAL_POOL[Math.floor(Math.random() * KKT_SERIAL_POOL.length)];
-    const port = KKT_PORTS[Math.floor(Math.random() * KKT_PORTS.length)];
-    window.setTimeout(() => {
-      dispatch({ type: "KKT_SCAN_DONE", serial, port });
-      addToast("ok", `На ${port} обнаружена ККТ: серийный № ${serial}`);
-    }, 1800);
-  }, [state.kktSerial, addToast]);
-
-  const applyKkt = useCallback(
-    (serial: string) => {
-      dispatch({ type: "KKT_APPLY", serial });
-      addToast("ok", `ККТ привязана к монитору: esm-cm-${serial}`);
-    },
-    [addToast]
-  );
-
-  /* LIVE-проверка: реальный запрос к ЛМ на этом ПК */
-  const checkLive = useCallback(async () => {
-    dispatch({ type: "LIVE_START" });
-    const ctrl = new AbortController();
-    const t = window.setTimeout(() => ctrl.abort(), 4000);
+  /* восстановление сохранённого серийника */
+  useEffect(() => {
     try {
-      const res = await fetch(`http://localhost:5995/api/v2/status?_=${Date.now()}`, {
-        headers: { Authorization: "Basic YWRtaW46YWRtaW4=" },
-        signal: ctrl.signal,
-      });
-      const data: { version?: unknown; inn?: unknown } = await res.json();
-      const version = data?.version ? String(data.version) : "n/a";
-      const inn = data?.inn ? String(data.inn) : null;
-      dispatch({ type: "LIVE_OK", version, inn });
-      addToast("ok", `Реальный ЛМ ответил: версия ${version}`);
+      const s = localStorage.getItem(LS_SERIAL);
+      if (s) dispatch({ type: "SET_SERIAL", value: s });
     } catch {
-      dispatch({ type: "LIVE_FAIL", note: "таймаут, CORS или модуль не запущен" });
-      addToast("warn", "Реальный ЛМ не ответил — показана демо-версия из симуляции");
-    } finally {
-      window.clearTimeout(t);
+      /* приватный режим */
     }
-  }, [addToast]);
+  }, []);
 
-  const handleInit = useCallback(
-    (token: string) => {
-      const clean = token.trim();
-      if (clean.length < 24) {
-        setInitError("Токен слишком короткий — минимум 24 символа");
-        addToast("err", "Токен пуст или некорректен. Инициализация отклонена.");
-        return;
+  const applySerial = useCallback(
+    (serial: string) => {
+      const v = serial.trim().toUpperCase();
+      dispatch({ type: "SET_SERIAL", value: v });
+      try {
+        if (v) localStorage.setItem(LS_SERIAL, v);
+        else localStorage.removeItem(LS_SERIAL);
+      } catch {
+        /* noop */
       }
-      setInitError(null);
-      setBusyInit(true);
-      dispatch({ type: "INIT_START" });
-      window.setTimeout(() => {
-        dispatch({ type: "INIT_DONE", token: clean });
-        setBusyInit(false);
-        addToast("ok", "Инициализация выполнена: модуль ЧЗ готов к работе");
-      }, 1500);
+      if (v) addToast("ok", `Серийный № принят: в реестре будет отслеживаться esm-cm-${v}`);
     },
     [addToast]
   );
 
-  const handleReset = useCallback(() => {
-    dispatch({ type: "RESET_CONFIG" });
-    addToast("warn", "Конфигурация ЛМ сброшена — введите токен заново");
-  }, [addToast]);
+  /* копирование реальных PowerShell-команд */
+  const copyCmd = useCallback(
+    async (cmd: string, what: string) => {
+      const ok = await copyText(cmd);
+      if (ok) {
+        dispatch({ type: "CMD_COPIED", what });
+        addToast("info", `Команда «${what}» скопирована — вставьте в PowerShell (от администратора)`);
+      } else {
+        addToast("err", "Не удалось скопировать команду в буфер обмена");
+      }
+    },
+    [addToast]
+  );
+
+  const restartCmd = useCallback(
+    (id: string) => copyCmd(psRestartOne(id), `рестарт ${id}`),
+    [copyCmd]
+  );
+
+  /* реальная инициализация токеном: POST init → прогресс загрузки → данные из базы */
+  const initToken = useCallback(
+    async (token: string): Promise<string | null> => {
+      const clean = token.trim();
+      if (clean.length < 24) return "Токен слишком короткий — минимум 24 символа";
+      dispatch({ type: "INIT_SENDING" });
+
+      const r = await lmRequest("POST", "/api/v2/init", { token: clean }, 8000);
+      if (r.httpStatus === 0) {
+        const note = "ЛМ не принял запрос: модуль не запущен или браузер блокирует обращение (CORS). Используйте monitor-kkt34.hta";
+        dispatch({ type: "INIT_ERROR", note });
+        return note;
+      }
+      if (!r.ok) {
+        const note = `ЛМ отклонил инициализацию: HTTP ${r.httpStatus}${r.raw ? ` · ${r.raw.slice(0, 120)}` : ""}`;
+        dispatch({ type: "INIT_ERROR", note });
+        return note;
+      }
+      dispatch({ type: "INIT_HTTP", httpStatus: r.httpStatus, raw: r.raw });
+
+      /* опрос загрузки: реальный статус каждые 1.5 с, до ready или таймаута 180 с */
+      const startedAt = Date.now();
+      const tick = async () => {
+        const s = await lmRequest("GET", "/api/v2/status", undefined, 5000);
+        if (s.httpStatus > 0) {
+          const st = s.data && typeof s.data.status === "string" ? s.data.status : `HTTP ${s.httpStatus}`;
+          dispatch({ type: "INIT_PROGRESS", apiStatus: st, fields: flattenFields(s.data) });
+          if (st === "ready") {
+            /* дотягиваем реальные данные о наполнении базы */
+            const probes = ["/api/v2/sync/state", "/api/v2/stats", "/api/v2/db/info", "/api/v2/info"];
+            const db = [...flattenFields(s.data)];
+            for (const p of probes) {
+              const pr = await lmRequest("GET", p, undefined, 2000);
+              if (pr.httpStatus > 0 && pr.ok && pr.data) {
+                for (const f of flattenFields(pr.data)) {
+                  if (!db.some((d) => d.key === f.key)) db.push({ key: `${p} → ${f.key}`, value: f.value });
+                }
+              }
+            }
+            dispatch({ type: "INIT_DB", db });
+            dispatch({ type: "INIT_DONE" });
+            addToast("ok", "Инициализация прошла успешно: данные загружены, ЛМ в статусе ready");
+            return;
+          }
+        }
+        if (Date.now() - startedAt > 180000) {
+          dispatch({ type: "INIT_ERROR", note: "Таймаут 180 с — ЛМ не перешёл в статус ready. Проверьте журнал модуля" });
+          return;
+        }
+        initTimer.current = window.setTimeout(tick, 1500);
+      };
+      initTimer.current = window.setTimeout(tick, 1200);
+      return null;
+    },
+    [addToast]
+  );
+
+  useEffect(() => () => {
+    if (initTimer.current) window.clearTimeout(initTimer.current);
+  }, []);
 
   const handleMinimize = useCallback(() => {
     setMinimized(true);
     addToast("info", "Монитор свёрнут в трей. Программа работает в фоновом режиме.");
   }, [addToast]);
-
   const handleExpand = useCallback(() => {
     setMinimized(false);
     addToast("ok", "Монитор развёрнут");
   }, [addToast]);
 
-  const handleInterval = useCallback((ms: number) => dispatch({ type: "SET_INTERVAL", value: ms }), []);
-  const handlePollNow = useCallback(() => dispatch({ type: "POLL", now: Date.now() }), []);
-
   return (
     <div className="relative min-h-screen">
-      {/* фоновые слои */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div
           className="animate-float-slow absolute -top-44 -left-44 h-[580px] w-[580px]"
@@ -174,7 +208,7 @@ export default function App() {
           <Header state={state} now={now} onMinimize={handleMinimize} />
 
           <main className="mx-auto flex max-w-[1480px] flex-col gap-5 px-4 py-6 md:px-8">
-            <VerdictStrip state={state} now={now} onPollNow={handlePollNow} />
+            <VerdictStrip state={state} now={now} onPollNow={pollOnce} />
 
             <ToolPanel onToast={addToast} />
 
@@ -182,19 +216,17 @@ export default function App() {
               <div className="xl:col-span-2">
                 <ServiceBoard
                   state={state}
-                  onRestart={restartOne}
-                  onRestartAll={restartAll}
-                  onScan={scanKkt}
-                  onApplyKkt={applyKkt}
+                  onCopyRestart={restartCmd}
+                  onCopyCmd={copyCmd}
                 />
               </div>
               <ApiPanel
                 state={state}
-                busyInit={busyInit}
-                initError={initError}
-                onInit={handleInit}
-                onReset={handleReset}
-                onLive={checkLive}
+                now={now}
+                onInit={initToken}
+                onInitReset={() => dispatch({ type: "INIT_RESET" })}
+                onPoll={pollOnce}
+                onApplySerial={applySerial}
               />
             </div>
 
@@ -205,9 +237,7 @@ export default function App() {
               <OpsPanel
                 state={state}
                 uptime={uptime}
-                onInterval={handleInterval}
-                onToggleHeal={() => dispatch({ type: "TOGGLE_HEAL" })}
-                onToggleFaults={() => dispatch({ type: "TOGGLE_FAULTS" })}
+                onInterval={(ms) => dispatch({ type: "SET_INTERVAL", value: ms })}
               />
             </div>
 
@@ -217,12 +247,12 @@ export default function App() {
             >
               <span>
                 © {new Date().getFullYear()} ООО «Правовой Статус» (ККТ34) ·{" "}
-                <span className="text-brand-400">kkt34.ru</span> · г. Волгоград · сервисное
-                обслуживание ККТ
+                <span className="text-brand-400">kkt34.ru</span> · г. Волгоград · режим реальных
+                запросов
               </span>
               <span>
-                GET /api/v2/status · POST /api/v2/init · {state.services.length} служб · интервал{" "}
-                {state.pollInterval / 1000} с
+                GET {LM_BASE}/api/v2/status · POST /api/v2/init · {TARGET_SERVICES.length}+ служб ·
+                интервал {state.interval / 1000} с
               </span>
             </footer>
           </main>
