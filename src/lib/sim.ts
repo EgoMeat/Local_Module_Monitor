@@ -30,6 +30,9 @@ export interface SimState {
   kktScan: "idle" | "scanning";
   kktDetected: { serial: string; port: string } | null;
   tokenTail: string | null;
+  live: "idle" | "checking" | "ok" | "fail";
+  liveVersion: string | null;
+  liveNote: string | null;
   ping: number[];
   lastPoll: number | null;
   pollInterval: number;
@@ -54,7 +57,10 @@ export type SimAction =
   | { type: "CLEAR_LOGS" }
   | { type: "KKT_SCAN_START" }
   | { type: "KKT_SCAN_DONE"; serial: string; port: string }
-  | { type: "KKT_APPLY"; serial: string };
+  | { type: "KKT_APPLY"; serial: string }
+  | { type: "LIVE_START" }
+  | { type: "LIVE_OK"; version: string; inn: string | null }
+  | { type: "LIVE_FAIL"; note: string };
 
 /* правдоподобные серийники АТОЛ для демо-опроса */
 export const KKT_SERIAL_POOL = ["100412345678", "100387654321", "100455667788", "100512004578"];
@@ -101,6 +107,9 @@ export function makeInitialState(): SimState {
     kktScan: "idle",
     kktDetected: null,
     tokenTail: null,
+    live: "idle",
+    liveVersion: null,
+    liveNote: null,
     ping: [],
     lastPoll: null,
     pollInterval: 4000,
@@ -338,6 +347,35 @@ export function reducer(state: SimState, action: SimAction): SimState {
             : s
         ),
         logs: pushLog(state.logs, "ok", `Контроллер привязан: служба esm-cm-${action.serial} · РАБОТАЕТ`),
+      };
+
+    case "LIVE_START":
+      return {
+        ...state,
+        live: "checking",
+        liveNote: null,
+        logs: pushLog(state.logs, "action", "LIVE: запрос к реальному ЛМ → GET http://localhost:5995/api/v2/status…"),
+      };
+
+    case "LIVE_OK":
+      return {
+        ...state,
+        live: "ok",
+        liveVersion: action.version,
+        liveNote: null,
+        logs: pushLog(
+          state.logs,
+          "ok",
+          `LIVE: реальный модуль ответил — версия ${action.version}` + (action.inn ? `, ИНН ${action.inn}` : "")
+        ),
+      };
+
+    case "LIVE_FAIL":
+      return {
+        ...state,
+        live: "fail",
+        liveNote: action.note,
+        logs: pushLog(state.logs, "warn", `LIVE: реальный ЛМ не ответил (${action.note}) — остаётся демо-телеметрия`),
       };
 
     default:

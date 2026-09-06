@@ -85,6 +85,29 @@ export default function App() {
     [addToast]
   );
 
+  /* LIVE-проверка: реальный запрос к ЛМ на этом ПК */
+  const checkLive = useCallback(async () => {
+    dispatch({ type: "LIVE_START" });
+    const ctrl = new AbortController();
+    const t = window.setTimeout(() => ctrl.abort(), 4000);
+    try {
+      const res = await fetch(`http://localhost:5995/api/v2/status?_=${Date.now()}`, {
+        headers: { Authorization: "Basic YWRtaW46YWRtaW4=" },
+        signal: ctrl.signal,
+      });
+      const data: { version?: unknown; inn?: unknown } = await res.json();
+      const version = data?.version ? String(data.version) : "n/a";
+      const inn = data?.inn ? String(data.inn) : null;
+      dispatch({ type: "LIVE_OK", version, inn });
+      addToast("ok", `Реальный ЛМ ответил: версия ${version}`);
+    } catch {
+      dispatch({ type: "LIVE_FAIL", note: "таймаут, CORS или модуль не запущен" });
+      addToast("warn", "Реальный ЛМ не ответил — показана демо-версия из симуляции");
+    } finally {
+      window.clearTimeout(t);
+    }
+  }, [addToast]);
+
   const handleInit = useCallback(
     (token: string) => {
       const clean = token.trim();
@@ -171,6 +194,7 @@ export default function App() {
                 initError={initError}
                 onInit={handleInit}
                 onReset={handleReset}
+                onLive={checkLive}
               />
             </div>
 
