@@ -218,6 +218,7 @@ export default function App() {
                   state={state}
                   onCopyRestart={restartCmd}
                   onCopyCmd={copyCmd}
+                  onApplySerial={applySerial}
                 />
               </div>
               <ApiPanel

@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="x-ua-compatible" content="ie=edge">
+<title>Монитор ЛМ · Правовой Статус (ККТ34)</title>
+<HTA:APPLICATION
+  ID="MonLM"
+  APPLICATIONNAME="MonLM"
+  BORDER="thin"
+  BORDERSTYLE="normal"
+  CAPTION="yes"
+  ICON=""
+  MAXIMIZEBUTTON="yes"
+  MINIMIZEBUTTON="yes"
+  SHOWINTASKBAR="yes"
+  SINGLEINSTANCE="yes"
+  SYSMENU="yes"
+  VERSION="2.0"
+  WINDOWSTATE="normal"
+  SCROLL="no"
+/>
+<style>
+  :root{
+    --ink-950:#070d18;--ink-900:#0b1424;--ink-850:#0e1a2e;--ink-800:#132238;
+    --ink-700:#1f3a58;--ink-600:#2c5278;--ink-500:#3e6f9e;--ink-400:#6490b8;
+    --ink-300:#8fb1cf;--ink-200:#b9d1e6;--ink-100:#dfeaf5;--ink-50:#f3f8fc;
+    --brand-400:#fb923c;--brand-500:#f97316;--brand-900:#3d1c07;
+    --chz-300:#8ef0e2;--chz-400:#45d8c3;--chz-900:#07302d;
+    --ok:#34d399;--ok-d:#0a2f22;--warn:#fbbf24;--warn-d:#332407;--err:#f87171;--err-d:#331012;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--ink-950);color:var(--ink-100);font-family:'Segoe UI',Tahoma,sans-serif;overflow:auto}
+  button{font-family:inherit;cursor:pointer}
+  ::-webkit-scrollbar{width:10px}::-webkit-scrollbar-thumb{background:var(--ink-700);border-radius:8px}
+  .wrap{max-width:1200px;margin:0 auto;padding:16px 20px 30px}
+  header{display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--ink-700);padding-bottom:14px;margin-bottom:16px}
+  .logo{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(249,115,22,.5);background:var(--brand-900);color:var(--brand-400);font-weight:800;font-size:17px;position:relative;flex:none}
+  .logo b{position:absolute;right:-7px;bottom:-6px;border:1px solid rgba(251,146,60,.6);background:var(--ink-950);padding:0 4px;font-size:8px;letter-spacing:.1em;color:var(--brand-400)}
+  .ht .t1{font-size:15px;font-weight:800;letter-spacing:.16em}
+  .ht .t2{font-size:10px;color:var(--ink-400);letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
+  .hright{margin-left:auto;text-align:right}
+  #clock{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+  #apiChip{font-size:10px;color:var(--ink-400);margin-top:2px}
+  .verdict{border:1px solid var(--ink-700);background:linear-gradient(160deg,rgba(19,34,56,.9),var(--ink-850));padding:16px 20px;margin-bottom:16px;position:relative;overflow:hidden}
+  .verdict .bar{position:absolute;top:0;left:0;right:0;height:3px;background:var(--ok)}
+  #verdictLabel{font-size:26px;font-weight:800;letter-spacing:.03em;color:var(--ok)}
+  #verdictDetail{font-size:11px;color:var(--ink-300);margin-top:6px}
+  .led{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;vertical-align:middle}
+  .led.ok{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+  .led.warn{background:var(--warn);box-shadow:0 0 8px var(--warn)}
+  .led.err{background:var(--err);box-shadow:0 0 8px var(--err)}
+  .led.info{background:var(--brand-400);box-shadow:0 0 8px var(--brand-400)}
+  .led.dim{background:var(--ink-500)}
+  .cols{display:flex;gap:16px;align-items:flex-start}
+  .col-main{flex:1.6;min-width:0}
+  .col-side{flex:1;min-width:0}
+  .panel{border:1px solid var(--ink-700);background:linear-gradient(160deg,rgba(19,34,56,.85),var(--ink-850));margin-bottom:16px}
+  .phead{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--ink-700);padding:12px 16px}
+  .ptitle{font-size:10px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-300)}
+  .cnt{border:1px solid var(--ink-700);background:var(--ink-900);padding:1px 8px;font-size:10px;color:var(--ink-300)}
+  .btn{border:1px solid var(--ink-600);background:var(--ink-800);color:var(--ink-200);padding:6px 12px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;transition:all .15s}
+  .btn:hover:not(:disabled){border-color:var(--brand-400);color:var(--brand-400)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn.orange{border-color:var(--brand-400);background:var(--brand-500);color:#081120}
+  .btn.orange:hover:not(:disabled){background:var(--brand-400);color:#081120}
+  #svcGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px}
+  .svc{display:flex;align-items:center;gap:10px;border:1px solid var(--ink-700);background:rgba(11,20,36,.55);padding:9px 12px;transition:all .15s}
+  .svc:hover{border-color:var(--ink-600);background:var(--ink-850);transform:translateX(3px)}
+  .svc .mid{flex:1;min-width:0}
+  .svc .id{font-size:12px;font-weight:700;font-family:Consolas,monospace;color:var(--ink-100);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .svc .desc{font-size:10px;color:var(--ink-400);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+  .svc .st{font-size:9px;font-weight:700;letter-spacing:.06em;white-space:nowrap;font-family:Consolas,monospace}
+  .svc .kkt{border:1px solid rgba(249,115,22,.4);background:var(--brand-900);color:var(--brand-400);font-size:8px;padding:0 4px;margin-left:6px;letter-spacing:.1em}
+  .abtn{width:26px;height:26px;flex:none;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--ink-600);background:var(--ink-800);color:var(--ink-300);font-size:12px;font-weight:800;transition:all .12s}
+  .abtn:hover:not(:disabled){border-color:var(--brand-400);color:var(--brand-400)}
+  .abtn.stop:hover:not(:disabled){border-color:var(--err);color:var(--err)}
+  .abtn:disabled{opacity:.4;cursor:not-allowed}
+  .abtns{display:flex;gap:4px}
+  .apibody{padding:16px}
+  .arow{display:flex;justify-content:space-between;gap:14px;border-bottom:1px solid var(--ink-700);padding:7px 0;font-size:11px}
+  .arow .l{color:var(--ink-400)}
+  .arow .v{font-family:Consolas,monospace;font-weight:700;color:var(--ink-100);text-align:right}
+  .arow .v.acc{color:var(--chz-300)}
+  .tokform{margin-top:14px;border:1px solid rgba(249,115,22,.3);background:rgba(11,20,36,.7);padding:14px}
+  .tokform label{display:block;font-size:11px;font-weight:700;color:var(--ink-200);margin-bottom:8px}
+  .tokform input{width:100%;border:1px solid var(--ink-600);background:var(--ink-950);color:var(--ink-100);padding:9px 12px;font-size:12px;font-family:Consolas,monospace}
+  .tokform input:focus{outline:1px solid var(--brand-500)}
+  #initBox{margin-top:14px;border:1px solid var(--ink-700);background:rgba(11,20,36,.7);padding:14px;font-size:11px}
+  #initBox .big{font-size:13px;font-weight:800}
+  #initBox .kv{display:flex;justify-content:space-between;border-bottom:1px solid var(--ink-800);padding:4px 0;font-family:Consolas,monospace;font-size:10px}
+  #initBox .kv .k{color:var(--ink-400)}
+  #initBox .kv .v{color:var(--chz-300)}
+  #logList{max-height:240px;overflow-y:auto}
+  .lrow{display:flex;gap:10px;align-items:baseline;border-bottom:1px solid var(--ink-800);padding:6px 16px;font-family:Consolas,monospace;font-size:10px}
+  .lrow .ts{color:var(--ink-400);flex:none;width:64px}
+  .lrow .tag{flex:none;border:1px solid;padding:0 6px;font-size:8px;font-weight:800;letter-spacing:.08em}
+  .tag.action{border-color:rgba(249,115,22,.4);background:var(--brand-900);color:var(--brand-400)}
+  .tag.ok{border-color:rgba(52,211,153,.4);background:var(--ok-d);color:#86efac}
+  .tag.warn{border-color:rgba(245,158,11,.4);background:var(--warn-d);color:#fde68a}
+  .tag.error{border-color:rgba(239,68,68,.4);background:var(--err-d);color:#fca5a5}
+  .tag.info{border-color:var(--ink-600);background:var(--ink-800);color:var(--ink-300)}
+  .lrow .msg{color:var(--ink-200);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pfoot{border-top:1px solid var(--ink-700);padding:10px 16px;font-size:9px;color:var(--ink-500);line-height:1.6}
+  footer{text-align:center;font-size:9px;color:var(--ink-500);margin-top:8px}
+  footer b{color:var(--brand-400)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">&#9878;<b>ККТ34</b></div>
+    <div class="ht">
+      <div class="t1">МОНИТОР ЛМ</div>
+      <div class="t2">«Правовой Статус» · Волгоград · сервис АТОЛ · реальный режим</div>
+    </div>
+    <div class="hright">
+      <div id="clock">--:--:--</div>
+      <div id="apiChip">ЛМ: опрос…</div>
+    </div>
+  </header>
+
+  <div class="verdict">
+    <div class="bar" id="verdictBar"></div>
+    <div><span class="led info" id="verdictLed"></span><span id="verdictLabel">ОПРОС СИСТЕМЫ</span></div>
+    <div id="verdictDetail">Читаем реальные статусы служб Windows и состояние ЛМ…</div>
+  </div>
+
+  <div class="cols">
+    <div class="col-main">
+
+      <div class="panel">
+        <div class="phead">
+          <span class="ptitle">Службы реестра Windows</span>
+          <span class="cnt" id="svcCount">—</span>
+          <span style="margin-left:auto"></span>
+          <button class="btn orange" id="refreshBtn" onclick="pollServices()">Обновить</button>
+          <button class="btn" id="restartAllBtn" onclick="restartAll()">Рестарт всех</button>
+        </div>
+        <div id="svcGrid"></div>
+        <div class="pfoot">
+          Реальные статусы через <b style="color:var(--chz-400)">Get-Service</b>. Кнопки
+          <b style="color:var(--chz-400)">&#9632;</b> (стоп) и <b style="color:var(--chz-400)">&#8635;</b> (рестарт)
+          выполняют <b style="color:var(--chz-400)">Stop-Service / Restart-Service</b>. Служба ККТ
+          <b style="color:var(--chz-400)">esm-cm-*</b> подтягивается автоматически по серийному номеру.
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="phead">
+          <span class="ptitle">Журнал реальных событий</span>
+          <span class="cnt" id="logCount">0</span>
+          <span style="margin-left:auto"></span>
+          <button class="btn" onclick="clearLog()">Очистить</button>
+        </div>
+        <div id="logList"></div>
+      </div>
+
+    </div>
+
+    <div class="col-side">
+      <div class="panel">
+        <div class="phead">
+          <span class="ptitle">API ЛМ Честного ЗНАКа</span>
+          <span class="cnt">:5995</span>
+          <span style="margin-left:auto"></span>
+          <button class="btn" onclick="pollLM()">Опрос</button>
+        </div>
+        <div class="apibody">
+          <div><span class="led info" id="apiLed"></span><span id="apiStatus" style="font-size:12px;font-weight:700">Опрос…</span></div>
+          <div style="margin-top:12px">
+            <div class="arow"><span class="l">Версия ЛМ</span><span class="v acc" id="lmVersion">—</span></div>
+            <div class="arow"><span class="l">ИНН организации</span><span class="v" id="lmInn">—</span></div>
+            <div class="arow"><span class="l">Статус модуля</span><span class="v" id="lmState">—</span></div>
+            <div class="arow"><span class="l">Отклик, мс</span><span class="v" id="lmPing">—</span></div>
+            <div class="arow"><span class="l">Опросов</span><span class="v" id="lmPolls">0</span></div>
+          </div>
+
+          <div class="tokform">
+            <label>Токен инициализации ЛМ ЧЗ</label>
+            <input id="tokInput" placeholder="Вставьте токен из ЛК Честного ЗНАКа…" />
+            <div style="margin-top:10px">
+              <button class="btn orange" id="initBtn" style="width:100%" onclick="doInit()">Запустить инициализацию</button>
+            </div>
+          </div>
+
+          <div id="initBox" style="display:none"></div>
+        </div>
+        <div class="pfoot">Реальные запросы к <b style="color:var(--chz-400)">http://localhost:5995/api/v2/…</b> (Basic admin:admin). HTA обращается к ЛМ напрямую, без CORS.</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>© <span id="yr"></span> ООО «Правовой Статус» (ККТ34) · <b>kkt34.ru</b> · г. Волгоград · режим реальных запросов, демо-данные отключены</footer>
+</div>
+
+<script language="JScript">
+/* ================= Монитор ЛМ · реальный режим ================= */
+var LM = "http://localhost:5995";
+var AUTH = "Basic YWRtaW46YWRtaW4=";
+var BASE = ["regime","yenisei","atol-service-agent","atol-service-agent-gui","atol-service-agent-updater","atol-grpc-service","epc-bridge","esm-lm-controller","esm-orchestrator","uem-agent","uem-updater"];
+var INTERVAL = 4000;
+var shell = new ActiveXObject("WScript.Shell");
+var services = {};      /* id -> {id, desc, status} */
+var dynKkt = [];        /* найденные esm-cm-* */
+var logArr = [];
+var polls = 0, reqCount = 0, errCount = 0;
+var apiState = "boot", lmVersion = null, lmInn = null, lastPing = null;
+var pendingExec = null; /* асинхронный PowerShell-процесс */
+var initRunning = false;
+
+window.resizeTo(1240, 820);
+document.getElementById("yr").innerHTML = new Date().getFullYear();
+
+/* ---- журнал ---- */
+function log(level, msg){
+  var d = new Date();
+  var ts = ("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)+":"+("0"+d.getSeconds()).slice(-2);
+  logArr.unshift({ts:ts, level:level, msg:msg});
+  if(logArr.length>200) logArr.length=200;
+  renderLog();
+}
+function renderLog(){
+  var TAGS={action:"ДЕЙСТВИЕ",ok:"ОК",warn:"ВНИМАНИЕ",error:"ОШИБКА",info:"ИНФО"};
+  var h="";
+  for(var i=0;i<logArr.length;i++){
+    var e=logArr[i];
+    h+='<div class="lrow"><span class="ts">'+e.ts+'</span><span class="tag '+e.level+'">'+TAGS[e.level]+'</span><span class="msg">'+e.msg+'</span></div>';
+  }
+  document.getElementById("logList").innerHTML=h;
+  document.getElementById("logCount").innerHTML=logArr.length;
+}
+function clearLog(){ logArr=[]; log("info","Журнал очищен оператором"); }
+
+/* ---- реальные статусы служб через PowerShell ---- */
+function svcNames(){
+  var all = BASE.slice();
+  for(var i=0;i<dynKkt.length;i++) if(all.indexOf(dynKkt[i])<0) all.push(dynKkt[i]);
+  return all;
+}
+function psListCmd(){
+  var names = svcNames().map(function(n){ return "'"+n+"'"; }).join(",");
+  return "powershell -NoProfile -Command \"" +
+    "Get-Service -Name " + names + ",'esm-cm-*' -ErrorAction SilentlyContinue | " +
+    "ForEach-Object { $_.Name + '=' + $_.Status }\"";
+}
+function pollServices(){
+  if(pendingExec){ /* предыдущий опрос ещё идёт */ return; }
+  try{
+    pendingExec = shell.Exec(psListCmd());
+    log("action","Запрос реестра служб: Get-Service ("+(svcNames().length)+"+ имён)…");
+  }catch(e){
+    log("error","Не удалось запустить PowerShell: "+e.message);
+    pendingExec=null;
+  }
+}
+function drainExec(){
+  if(!pendingExec) return;
+  if(pendingExec.Status===0) return; /* ещё работает */
+  var out="";
+  try{ out = pendingExec.StdOut.ReadAll(); }catch(e){}
+  pendingExec=null;
+  parseSvc(out);
+}
+function parseSvc(out){
+  var seen={};
+  var lines=out.split(/\r?\n/);
+  var newKkt=[];
+  for(var i=0;i<lines.length;i++){
+    var ln=lines[i]; var eq=ln.indexOf("=");
+    if(eq<0) continue;
+    var name=ln.substr(0,eq).replace(/^\s+|\s+$/g,"");
+    var st=ln.substr(eq+1).replace(/^\s+|\s+$/g,"");
+    if(!name) continue;
+    seen[name]=st;
+    if(name.indexOf("esm-cm-")===0 && newKkt.indexOf(name)<0) newKkt.push(name);
+  }
+  if(newKkt.length){
+    for(var k=0;k<newKkt.length;k++){
+      if(dynKkt.indexOf(newKkt[k])<0){
+        dynKkt.push(newKkt[k]);
+        log("ok","Автопоиск: обнаружена служба ККТ "+newKkt[k]);
+      }
+    }
+  }
+  var run=0,stop=0;
+  for(var n in seen){
+    services[n]={id:n, desc:descOf(n), status:seen[n]};
+    if(seen[n]==="Running") run++; else stop++;
+  }
+  log("info","Реестр прочитан: "+run+" работает, "+stop+" в другом состоянии, всего "+(function(){var c=0;for(var x in seen)c++;return c;})()+" найдено");
+  renderServices();
+  renderVerdict();
+}
+function descOf(id){
+  if(id.indexOf("esm-cm-")===0) return "Контроллер ККТ · сер. "+id.replace("esm-cm-","");
+  var map={"regime":"Служба фискального режима","yenisei":"Транспорт обмена с ОФД","atol-service-agent":"Агент сервисов АТОЛ","atol-service-agent-gui":"GUI-оболочка агента","atol-service-agent-updater":"Канал обновлений агента","atol-grpc-service":"gRPC-шлюз АТОЛ","epc-bridge":"Мост электронных чеков","esm-lm-controller":"Контроллер локального модуля","esm-orchestrator":"Оркестратор ESM","uem-agent":"Агент UEM","uem-updater":"Канал обновлений UEM"};
+  return map[id]||"Служба стека";
+}
+
+function renderServices(){
+  var ids=svcNames();
+  var h="", run=0, total=0;
+  for(var i=0;i<ids.length;i++){
+    var id=ids[i];
+    var s=services[id];
+    var st = s? s.status : "Не найдена";
+    var isKkt = id.indexOf("esm-cm-")===0;
+    var ledCls = st==="Running"?"ok":(st==="Не найдена"?"dim":"warn");
+    var col = st==="Running"?"var(--ok)":(st==="Не найдена"?"var(--ink-500)":"var(--warn)");
+    if(st==="Running") run++;
+    total++;
+    h+='<div class="svc"><span class="led '+ledCls+'" style="margin:0"></span>'
+      +'<div class="mid"><div class="id">'+id+(isKkt?'<span class="kkt">ККТ</span>':'')+'</div><div class="desc">'+descOf(id)+'</div></div>'
+      +'<span class="st" style="color:'+col+'">'+st+'</span>'
+      +'<span class="abtns">'
+      +'<button class="abtn stop" title="Stop-Service '+id+'" onclick="stopSvc(\''+id+'\')" '+(st==="Не найдена"?"disabled":"")+'>&#9632;</button>'
+      +'<button class="abtn" title="Restart-Service '+id+'" onclick="restartSvc(\''+id+'\')" '+(st==="Не найдена"?"disabled":"")+'>&#8635;</button>'
+      +'</span></div>';
+  }
+  document.getElementById("svcGrid").innerHTML=h;
+  document.getElementById("svcCount").innerHTML=run+"/"+total+" работает";
+}
+
+function runPs(cmd, what){
+  try{
+    shell.Run("powershell -NoProfile -Command \""+cmd+"\"", 0, false);
+    log("action",what+" — команда отправлена в PowerShell");
+    setTimeout(pollServices, 1500);
+  }catch(e){
+    log("error","Ошибка выполнения "+what+": "+e.message);
+    errCount++;
+  }
+}
+function stopSvc(id){ runPs("Stop-Service -Name '"+id+"' -Force -ErrorAction SilentlyContinue","Остановка "+id); }
+function restartSvc(id){ runPs("Restart-Service -Name '"+id+"' -Force -ErrorAction SilentlyContinue","Рестарт "+id); }
+function restartAll(){
+  var ids=svcNames();
+  var cmd=ids.map(function(n){return "Restart-Service -Name '"+n+"' -Force -ErrorAction SilentlyContinue";}).join("; ");
+  log("warn","Массовый рестарт всего стека ("+ids.length+" служб)…");
+  runPs(cmd,"Рестарт всех служб");
+}
+
+/* ---- реальные запросы к ЛМ (WinHTTP, без CORS) ---- */
+function lmRequest(method, path, body, cb){
+  reqCount++;
+  var t0=new Date().getTime();
+  try{
+    var x=new ActiveXObject("WinHttp.WinHttpRequest.5.1");
+    x.setTimeouts(2000,2000,4000,6000);
+    x.open(method, LM+path+(path.indexOf("?")<0?"?":"&")+"_="+t0, true);
+    x.setRequestHeader("Authorization", AUTH);
+    if(body!==undefined) x.setRequestHeader("Content-Type","application/json");
+    x.onreadystatechange=function(){
+      if(x.readyState===4){
+        var ms=new Date().getTime()-t0;
+        var data=null;
+        try{ data=eval("("+x.responseText+")"); }catch(e){ data=null; }
+        cb(x.status, data, x.responseText, ms);
+      }
+    };
+    x.send(body!==undefined?body:"");
+  }catch(e){
+    errCount++;
+    cb(0, null, "", new Date().getTime()-t0, e.message);
+  }
+}
+
+function pollLM(){
+  lmRequest("GET","/api/v2/status",undefined,function(status,data,raw,ms,err){
+    polls++;
+    if(status===0){
+      apiState="unreachable";
+      log("error","ЛМ не отвечает: "+(err||"порт 5995 недоступен"));
+    }else{
+      lastPing=ms;
+      if(data && data.version!==undefined) lmVersion=String(data.version);
+      if(data && data.inn!==undefined) lmInn=String(data.inn);
+      var st = data && data.status? String(data.status) : ("HTTP "+status);
+      apiState = st==="ready"?"ready":(st==="not_configured"?"not_configured":"other");
+      if(apiState==="ready") log("ok","ЛМ: ready · версия "+(lmVersion||"н/д")+(lmInn?" · ИНН "+lmInn:""));
+      else if(apiState==="not_configured") log("warn","ЛМ: not_configured — отправьте токен");
+      else log("info","ЛМ вернул статус «"+st+"»");
+      renderApi(st);
+    }
+    renderApiStatus();
+    renderVerdict();
+  });
+}
+
+function renderApi(st){
+  document.getElementById("lmVersion").innerHTML=lmVersion||"—";
+  document.getElementById("lmInn").innerHTML=lmInn||"—";
+  document.getElementById("lmState").innerHTML=st||"—";
+  document.getElementById("lmPing").innerHTML=lastPing!==null?lastPing:"—";
+  document.getElementById("lmPolls").innerHTML=polls;
+}
+function renderApiStatus(){
+  var el=document.getElementById("apiStatus"), led=document.getElementById("apiLed"), chip=document.getElementById("apiChip");
+  if(apiState==="ready"){ el.innerHTML="ЛМ: Готов к работе (ready)"; el.style.color="var(--ok)"; led.className="led ok"; chip.innerHTML="ЛМ "+(lmVersion||"ready"); }
+  else if(apiState==="not_configured"){ el.innerHTML="ЛМ: Не настроен — отправьте токен"; el.style.color="var(--warn)"; led.className="led warn"; chip.innerHTML="ЛМ: не настроен"; }
+  else if(apiState==="unreachable"){ el.innerHTML="ЛМ: Недоступен (порт 5995)"; el.style.color="var(--err)"; led.className="led err"; chip.innerHTML="ЛМ: нет связи"; }
+  else { el.innerHTML="ЛМ: опрос…"; el.style.color="var(--brand-400)"; led.className="led info"; chip.innerHTML="ЛМ: опрос…"; }
+}
+
+/* ---- инициализация токеном: реальный POST + опрос загрузки ---- */
+function doInit(){
+  if(initRunning) return;
+  var tok=document.getElementById("tokInput").value.replace(/^\s+|\s+$/g,"");
+  if(tok.length<24){ showInit("error","Токен слишком короткий — минимум 24 символа",[]); log("error","Инициализация отклонена: токен слишком короткий"); return; }
+  initRunning=true;
+  document.getElementById("initBtn").disabled=true;
+  log("action","POST "+LM+"/api/v2/init — отправка токена в ЛМ…");
+  showInit("sending","Отправка токена → POST /api/v2/init",[]);
+  lmRequest("POST","/api/v2/init",{token:tok},function(status,data,raw,ms,err){
+    if(status===0){
+      initRunning=false; document.getElementById("initBtn").disabled=false;
+      showInit("error","ЛМ не принял запрос: модуль не запущен или не отвечает",[]);
+      log("error","Инициализация: ЛМ не отвечает ("+(err||"нет связи")+")");
+      return;
+    }
+    if(status>=200 && status<300){
+      log("ok","ЛМ принял токен (HTTP "+status+"). Опрос загрузки данных…");
+      watchLoading(0);
+    }else{
+      initRunning=false; document.getElementById("initBtn").disabled=false;
+      showInit("error","ЛМ отклонил инициализацию: HTTP "+status,[]);
+      log("error","Инициализация отклонена ЛМ: HTTP "+status);
+    }
+  });
+}
+function watchLoading(n){
+  lmRequest("GET","/api/v2/status",undefined,function(status,data,raw,ms){
+    var fields=[];
+    if(data){ for(var k in data){ var v=data[k]; fields.push({k:k, v:(typeof v==="object"?"объект/массив":String(v))}); } }
+    var st = data && data.status? String(data.status):("HTTP "+status);
+    if(st==="ready"){
+      initRunning=false; document.getElementById("initBtn").disabled=false;
+      log("ok","Инициализация прошла успешно: статус ready, данные загружены ("+fields.length+" полей в ответе)");
+      showInit("done","Инициализация прошла успешно — данные загружены",fields);
+      pollLM();
+      return;
+    }
+    showInit("loading","Загрузка данных из ЛМ… статус: "+st+" · опрос #"+(n+1),fields);
+    if(n>120){ /* ~180 c */
+      initRunning=false; document.getElementById("initBtn").disabled=false;
+      showInit("error","Таймаут 180 с — ЛМ не перешёл в ready",fields);
+      log("error","Инициализация: таймаут, ЛМ не в статусе ready");
+      return;
+    }
+    setTimeout(function(){ watchLoading(n+1); },1500);
+  });
+}
+function showInit(phase,title,fields){
+  var box=document.getElementById("initBox");
+  box.style.display="block";
+  var color = phase==="done"?"var(--ok)":(phase==="error"?"var(--err)":"var(--chz-300)");
+  var h='<div class="big" style="color:'+color+'">'+title+'</div>';
+  if(phase==="done"){
+    h+='<div style="margin-top:6px;color:var(--ink-300)">Данных в базе ЛМ: <b style="color:var(--chz-300)">'+fields.length+' показателей</b></div>';
+  }
+  if(fields.length){
+    h+='<div style="margin-top:8px;max-height:150px;overflow-y:auto">';
+    for(var i=0;i<fields.length;i++){
+      h+='<div class="kv"><span class="k">'+fields[i].k+'</span><span class="v">'+fields[i].v+'</span></div>';
+    }
+    h+='</div>';
+  }
+  if(phase==="done"||phase==="error"){
+    h+='<div style="margin-top:10px"><button class="btn" onclick="hideInit()">скрыть отчёт</button></div>';
+  }
+  box.innerHTML=h;
+}
+function hideInit(){ document.getElementById("initBox").style.display="none"; }
+
+/* ---- вердикт ---- */
+function renderVerdict(){
+  var lbl=document.getElementById("verdictLabel"), det=document.getElementById("verdictDetail"),
+      led=document.getElementById("verdictLed"), bar=document.getElementById("verdictBar");
+  var run=0,tot=0; for(var k in services){ tot++; if(services[k].status==="Running") run++; }
+  if(apiState==="unreachable"){
+    lbl.innerHTML="НЕТ СВЯЗИ С ЛМ"; lbl.style.color="var(--err)"; led.className="led err"; bar.style.background="var(--err)";
+    det.innerHTML="Порт 5995 не отвечает. Проверьте, запущен ли локальный модуль. Службы: "+run+"/"+tot+" работает.";
+  }else if(apiState==="not_configured"){
+    lbl.innerHTML="НЕ НАСТРОЕН"; lbl.style.color="var(--warn)"; led.className="led warn"; bar.style.background="var(--warn)";
+    det.innerHTML="ЛМ на связи, но не инициализирован — отправьте токен. Службы: "+run+"/"+tot+" работает.";
+  }else if(apiState==="ready"){
+    lbl.innerHTML="ШТАТНЫЙ РЕЖИМ"; lbl.style.color="var(--ok)"; led.className="led ok"; bar.style.background="var(--ok)";
+    det.innerHTML="ЛМ готов · версия "+(lmVersion||"н/д")+(lmInn?" · ИНН "+lmInn:"")+". Службы: "+run+"/"+tot+" работает.";
+  }else{
+    lbl.innerHTML="ОПРОС СИСТЕМЫ"; lbl.style.color="var(--brand-400)"; led.className="led info"; bar.style.background="var(--brand-400)";
+    det.innerHTML="Читаем реальные статусы служб и состояние ЛМ…";
+  }
+}
+
+/* ---- часы ---- */
+setInterval(function(){
+  var d=new Date();
+  document.getElementById("clock").innerHTML=("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)+":"+("0"+d.getSeconds()).slice(-2);
+  drainExec();
+},1000);
+
+/* ---- старт ---- */
+log("info","Монитор запущен. Режим реальных запросов: демо-данные отключены");
+log("action","Первичный опрос реестра служб Windows (Get-Service)…");
+pollServices();
+pollLM();
+setInterval(function(){ pollServices(); pollLM(); }, INTERVAL);
+</script>
+</body>
+</html>

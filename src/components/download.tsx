@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { IconDownload, IconExternalLink, IconFileCode } from "./icons";
+import { TOOL_FILE } from "../lib/real";
+import { IconCli, IconDownload, IconExternalLink, IconFileCode } from "./icons";
 
-const FILE_NAME = "monitor-kkt34.html";
-const FILE_PATH = "monitor-kkt34.html"; /* public/ — отдаётся с корня */
+const FILE_PATH = TOOL_FILE; /* public/ — отдаётся с корня */
 
 function Step({ n, title, text }: { n: number; title: string; text: string }) {
   return (
@@ -28,10 +28,7 @@ export function ToolPanel({ onToast }: { onToast: (tone: "ok" | "warn" | "err" |
       .then((r) => (r.ok ? r.text() : null))
       .then((t) => {
         if (alive && t) {
-          setMeta({
-            kb: (new Blob([t]).size / 1024).toFixed(1),
-            lines: t.split("\n").length,
-          });
+          setMeta({ kb: (new Blob([t]).size / 1024).toFixed(1), lines: t.split("\n").length });
         }
       })
       .catch(() => {});
@@ -46,18 +43,18 @@ export function ToolPanel({ onToast }: { onToast: (tone: "ok" | "warn" | "err" |
       const res = await fetch(FILE_PATH);
       if (!res.ok) throw new Error(String(res.status));
       const text = await res.text();
-      const blob = new Blob([text], { type: "text/html;charset=utf-8" });
+      const blob = new Blob([text], { type: "application/hta;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = FILE_NAME;
+      a.download = FILE_PATH;
       document.body.appendChild(a);
       a.click();
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 3000);
-      onToast("ok", `${FILE_NAME} скачан. Откройте файл двойным щелчком — он запустится в браузере.`);
+      onToast("ok", `${FILE_PATH} скачан. Запустите его двойным щелчком на кассовом ПК (Windows).`);
     } catch {
-      onToast("err", "Не удалось скачать файл. Попробуйте ссылку «Открыть в браузере» ниже.");
+      onToast("err", "Не удалось скачать файл. Попробуйте ссылку «Открыть» ниже.");
     } finally {
       setDownloading(false);
     }
@@ -78,21 +75,23 @@ export function ToolPanel({ onToast }: { onToast: (tone: "ok" | "warn" | "err" |
         <div className="min-w-0 flex-1">
           <div className="mb-3 flex items-center gap-2.5">
             <IconFileCode className="text-brand-400" width={17} height={17} />
-            <span className="panel-title text-brand-300">Автономный инструмент · один файл</span>
+            <span className="panel-title text-brand-300">Автономный инструмент для Windows · {FILE_PATH}</span>
           </div>
           <h2 className="font-display text-xl font-bold tracking-wide text-ink-50 sm:text-2xl">
-            Монитор ЛМ <span className="text-brand-400">без установки</span>
+            Реальное управление службами <span className="text-brand-400">в один клик</span>
           </h2>
           <p className="mt-2 max-w-2xl font-mono text-[11.5px] leading-relaxed text-ink-300">
-            Весь монитор упакован в единый файл <span className="font-semibold text-brand-300">{FILE_NAME}</span> —
-            как исходный .hta-скрипт, только современнее. Работает офлайн, не требует сервера, сборки
-            и Node.js. Настройки (интервал, авто-восстановление) сохраняются локально в браузере.
+            Браузер не имеет доступа к диспетчеру служб Windows (SCM) — это ограничение любой веб-страницы.
+            Поэтому полный инструмент упакован в <span className="font-semibold text-brand-300">{FILE_PATH}</span>:
+            он читает реальные статусы служб через <span className="text-chz-300">Get-Service</span>, останавливает и
+            перезапускает их через <span className="text-chz-300">Stop/Start-Service</span> и обращается к ЛМ на
+            :5995 напрямую, без CORS.
           </p>
 
           <ul className="mt-5 grid gap-4 sm:grid-cols-3">
-            <Step n={1} title="Скачайте" text="Кнопка справа сохранит файл на ваш компьютер." />
-            <Step n={2} title="Откройте" text="Двойной щелчок по файлу — запустится в любом браузере." />
-            <Step n={3} title="Пользуйтесь" text="Можно закрепить ярлык на рабочем столе кассира." />
+            <Step n={1} title="Скачайте" text="Сохраните .hta на кассовый ПК с Windows." />
+            <Step n={2} title="Запустите" text="Двойной щелчок — откроется окно монитора (mshta.exe)." />
+            <Step n={3} title="Управляйте" text="Реальные статусы, стоп и рестарт служб одним кликом." />
           </ul>
         </div>
 
@@ -103,7 +102,7 @@ export function ToolPanel({ onToast }: { onToast: (tone: "ok" | "warn" | "err" |
             className="group flex items-center justify-center gap-3 border border-brand-400 bg-brand-500 px-5 py-4 font-display text-[13px] font-bold tracking-[0.1em] text-ink-950 uppercase transition-all hover:bg-brand-400 active:scale-[0.97] disabled:cursor-wait disabled:opacity-70"
           >
             <IconDownload width={19} height={19} className="transition-transform group-hover:translate-y-0.5" />
-            {downloading ? "Сохраняем…" : `Скачать ${FILE_NAME}`}
+            {downloading ? "Сохраняем…" : `Скачать ${FILE_PATH}`}
           </button>
           <a
             href={FILE_PATH}
@@ -112,12 +111,11 @@ export function ToolPanel({ onToast }: { onToast: (tone: "ok" | "warn" | "err" |
             className="flex items-center justify-center gap-2.5 border border-ink-600 bg-ink-800 px-5 py-3 font-display text-[11px] font-semibold tracking-[0.12em] text-ink-200 uppercase transition-all hover:border-brand-500/60 hover:text-brand-300 active:scale-[0.97]"
           >
             <IconExternalLink width={15} height={15} />
-            Открыть в браузере
+            Открыть / скачать
           </a>
           <div className="flex items-center justify-center gap-2 font-mono text-[10px] tracking-wide text-ink-400">
-            <span>{meta ? `${meta.kb} КБ · ${meta.lines} строк` : "один HTML-файл"}</span>
-            <span className="text-ink-600">·</span>
-            <span>HTML + CSS + JS внутри</span>
+            <IconCli width={12} height={12} className="text-chz-400" />
+            <span>{meta ? `${meta.kb} КБ · ${meta.lines} строк` : "HTA · PowerShell · XHR"}</span>
           </div>
         </div>
       </div>

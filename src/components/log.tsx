@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import type { LogEntry, LogLevel, SimState } from "../lib/sim";
-import { computeVerdict, fmtClock } from "../lib/sim";
+import type { LogEntry, LogLevel, MonState } from "../lib/real";
+import { computeVerdict, fmtClock } from "../lib/real";
 import { IconBroom, IconCheckCircle, IconInfoDot, IconTerminal, IconTrayUp, IconWarnTriangle, IconXCircle } from "./icons";
 import { Led, toneBg, toneText, type Tone } from "./header";
 
@@ -36,7 +36,7 @@ function Entry({ e }: { e: LogEntry }) {
   );
 }
 
-export function LogPanel({ state, onClear }: { state: SimState; onClear: () => void }) {
+export function LogPanel({ state, onClear }: { state: MonState; onClear: () => void }) {
   const [filter, setFilter] = useState<LogLevel | "all">("all");
 
   const entries = useMemo(
@@ -48,7 +48,7 @@ export function LogPanel({ state, onClear }: { state: SimState; onClear: () => v
     <section className="panel animate-rise flex h-full flex-col" style={{ animationDelay: "380ms" }}>
       <div className="flex flex-wrap items-center gap-3 border-b border-ink-700/80 px-5 py-4">
         <IconTerminal className="text-brand-400" width={16} height={16} />
-        <h2 className="panel-title">Журнал событий</h2>
+        <h2 className="panel-title">Журнал реальных событий</h2>
         <span className="border border-ink-700 bg-ink-900 px-2 py-0.5 font-mono text-[10px] tabular-nums text-ink-300">
           {entries.length}
         </span>
@@ -89,7 +89,7 @@ export function LogPanel({ state, onClear }: { state: SimState; onClear: () => v
   );
 }
 
-/* ---- тосты (аналог BalloonTip) ---- */
+/* ---- тосты ---- */
 
 export interface ToastData {
   id: number;
@@ -148,12 +148,19 @@ export function TrayPill({
   now,
   onExpand,
 }: {
-  state: SimState;
+  state: MonState;
   now: number;
   onExpand: () => void;
 }) {
   const verdict = computeVerdict(state);
-  const running = state.services.filter((s) => s.status === "running").length;
+  const apiShort =
+    state.api === "ready"
+      ? "ready"
+      : state.api === "not_configured"
+        ? "не настроен"
+        : state.api === "unreachable"
+          ? "нет связи"
+          : "…";
 
   return (
     <button
@@ -161,13 +168,13 @@ export function TrayPill({
       className="animate-toast-in group fixed right-5 bottom-5 z-50 flex items-center gap-3 border border-ink-600 bg-ink-850/95 py-3 pr-5 pl-4 shadow-[0_20px_50px_-16px_rgba(0,0,0,0.85)] backdrop-blur-md transition-all hover:border-brand-500/60 hover:bg-ink-800"
       title="Развернуть монитор"
     >
-      <Led tone={verdict.tone} pulse size="h-3 w-3" />
+      <Led tone={verdict.tone} pulse size="h-3 w-3" blink={verdict.tone === "err"} />
       <span className="text-left leading-tight">
         <span className="block font-display text-[11px] font-semibold tracking-[0.16em] text-ink-50">
           МОНИТОР ЛМ · ФОН
         </span>
         <span className="block font-mono text-[10px] tabular-nums text-ink-300">
-          {running}/{state.services.length} служб · {fmtClock(now)}
+          ЛМ: {apiShort} · {fmtClock(now)}
         </span>
       </span>
       <IconTrayUp
