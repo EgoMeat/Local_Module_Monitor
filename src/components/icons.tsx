@@ -171,6 +171,20 @@ export const IconExternalLink = (p: P) => (
   </svg>
 );
 
+export const IconCopy = (p: P) => (
+  <svg {...base(p)}>
+    <rect x="8.5" y="8.5" width="12" height="12" rx="1.5" />
+    <path d="M15.5 8.5v-4A1.5 1.5 0 0 0 14 3H5A1.5 1.5 0 0 0 3.5 4.5v9A1.5 1.5 0 0 0 5 15h3.5" />
+  </svg>
+);
+
+export const IconCli = (p: P) => (
+  <svg {...base(p)}>
+    <rect x="3" y="4.5" width="18" height="15" rx="1.5" />
+    <path d="m7 9.5 3 2.7-3 2.7M12.5 15.5H17" />
+  </svg>
+);
+
 export const IconFileCode = (p: P) => (
   <svg {...base(p)}>
     <path d="M13.5 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8.5L13.5 3Z" />
