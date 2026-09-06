@@ -161,7 +161,11 @@ export function ApiPanel({
           <InfoRow label="Версия ЛМ" value={reachable ? state.apiVersion : "нет связи"} accent={reachable} />
           <InfoRow label="ИНН организации" value={state.inn ?? "—"} />
           <InfoRow label="Токен сессии" value={state.tokenTail ? `принят ····${state.tokenTail}` : "не задан"} />
-          <InfoRow label="Серийный № ККТ" value={state.kktSerial} />
+          <InfoRow
+            label="Серийный № ККТ"
+            value={state.kktSerial ?? "не задан"}
+            accent={state.kktSerial !== null}
+          />
           <InfoRow label="Опросов выполнено" value={String(state.totals.polls)} />
         </div>
 

@@ -26,7 +26,9 @@ export interface SimState {
   api: ApiState;
   apiVersion: string;
   inn: string | null;
-  kktSerial: string;
+  kktSerial: string | null;
+  kktScan: "idle" | "scanning";
+  kktDetected: { serial: string; port: string } | null;
   tokenTail: string | null;
   ping: number[];
   lastPoll: number | null;
@@ -49,7 +51,15 @@ export type SimAction =
   | { type: "SET_INTERVAL"; value: number }
   | { type: "TOGGLE_HEAL" }
   | { type: "TOGGLE_FAULTS" }
-  | { type: "CLEAR_LOGS" };
+  | { type: "CLEAR_LOGS" }
+  | { type: "KKT_SCAN_START" }
+  | { type: "KKT_SCAN_DONE"; serial: string; port: string }
+  | { type: "KKT_APPLY"; serial: string };
+
+/* правдоподобные серийники АТОЛ для демо-опроса */
+export const KKT_SERIAL_POOL = ["100412345678", "100387654321", "100455667788", "100512004578"];
+export const KKT_PORTS = ["COM3", "COM4", "COM5"];
+export const SERIAL_RE = /^[0-9A-Z][0-9A-Z-]{4,18}[0-9A-Z]$/;
 
 export const KKT_SERIAL = "100412345678";
 const API_VERSION = "2.4.1.386";
@@ -81,13 +91,15 @@ export function makeInitialState(): SimState {
       svc("esm-orchestrator", "Оркестратор ESM", "running"),
       svc("uem-agent", "Агент UEM", "running"),
       svc("uem-updater", "Канал обновлений UEM", "stopped"),
-      svc(`esm-cm-${KKT_SERIAL}`, "Контроллер ККТ · сер. " + KKT_SERIAL, "running", true),
+      svc("esm-cm-—", "ККТ не привязана — укажите серийный № или выполните опрос", "not_found", true),
     ],
     configured: false,
     api: "probing",
     apiVersion: API_VERSION,
     inn: null,
-    kktSerial: KKT_SERIAL,
+    kktSerial: null,
+    kktScan: "idle",
+    kktDetected: null,
     tokenTail: null,
     ping: [],
     lastPoll: null,
@@ -98,7 +110,7 @@ export function makeInitialState(): SimState {
       pushLog(
         pushLog([], "info", "Монитор запущен. Целевых служб в реестре: 12", now - 400),
         "info",
-        `Автопоиск: обнаружена служба ККТ esm-cm-${KKT_SERIAL} (серийный № ${KKT_SERIAL})`,
+        "Автопоиск esm-cm*: подключённая ККТ не найдена — привяжите её по серийному №",
         now - 250
       ),
       "action",
@@ -289,6 +301,44 @@ export function reducer(state: SimState, action: SimAction): SimState {
 
     case "CLEAR_LOGS":
       return { ...state, logs: pushLog([], "info", "Журнал событий очищен оператором") };
+
+    case "KKT_SCAN_START":
+      return {
+        ...state,
+        kktScan: "scanning",
+        kktDetected: null,
+        logs: pushLog(state.logs, "action", "Опрос системы: сканирование COM-портов на наличие подключённой ККТ…"),
+      };
+
+    case "KKT_SCAN_DONE":
+      return {
+        ...state,
+        kktScan: "idle",
+        kktDetected: { serial: action.serial, port: action.port },
+        logs: pushLog(
+          state.logs,
+          "ok",
+          `Опрос завершён: на ${action.port} обнаружена ККТ АТОЛ, серийный № ${action.serial}`
+        ),
+      };
+
+    case "KKT_APPLY":
+      return {
+        ...state,
+        kktSerial: action.serial,
+        kktDetected: null,
+        services: state.services.map((s) =>
+          s.dynamic
+            ? {
+                ...s,
+                id: `esm-cm-${action.serial}`,
+                desc: `Контроллер ККТ · сер. ${action.serial}`,
+                status: "running" as ServiceStatus,
+              }
+            : s
+        ),
+        logs: pushLog(state.logs, "ok", `Контроллер привязан: служба esm-cm-${action.serial} · РАБОТАЕТ`),
+      };
 
     default:
       return state;
